@@ -12,6 +12,7 @@ class TtsProvider with ChangeNotifier {
   List<TextAudiobook> _textAudiobooks = [];
   TextAudiobook? _currentAudiobook;
   bool _isPlaying = false;
+  bool _isLoading = false;
   int _currentCharPosition = 0;
   double _speechRate = 1.0;
   bool _isPremium = false;
@@ -23,6 +24,7 @@ class TtsProvider with ChangeNotifier {
   List<TextAudiobook> get textAudiobooks => _textAudiobooks;
   TextAudiobook? get currentAudiobook => _currentAudiobook;
   bool get isPlaying => _isPlaying;
+  bool get isLoading => _isLoading;
   int get currentCharPosition => _currentCharPosition;
   double get speechRate => _speechRate;
   bool get isPremium => _isPremium;
@@ -60,6 +62,9 @@ class TtsProvider with ChangeNotifier {
   }
 
   Future<void> importTextFile() async {
+    _isLoading = true;
+    notifyListeners();
+    
     try {
       final audiobook = await _importService.importTextFile();
       if (audiobook != null) {
@@ -68,6 +73,10 @@ class TtsProvider with ChangeNotifier {
       }
     } catch (e) {
       print('Erreur import fichier texte: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

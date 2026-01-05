@@ -106,9 +106,22 @@ class _ImportTtsScreenState extends State<ImportTtsScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => ttsProvider.importTextFile(),
-                  icon: const Icon(Icons.upload_file),
-                  label: const Text('Importer TXT/EPUB/PDF'),
+                  onPressed: ttsProvider.isLoading 
+                      ? null 
+                      : () => _importWithProgress(context, ttsProvider),
+                  icon: ttsProvider.isLoading 
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.upload_file),
+                  label: Text(ttsProvider.isLoading 
+                      ? 'Import en cours...' 
+                      : 'Importer TXT/EPUB/PDF'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade500,
                     foregroundColor: Colors.white,
@@ -333,5 +346,31 @@ class _ImportTtsScreenState extends State<ImportTtsScreen> {
         ],
       ),
     );
+  }
+
+  void _importWithProgress(BuildContext context, TtsProvider ttsProvider) async {
+    try {
+      await ttsProvider.importTextFile();
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fichier importé avec succès !'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur d\'import: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }
