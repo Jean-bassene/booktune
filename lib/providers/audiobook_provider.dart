@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/audiobook.dart';
 import '../models/ambient_music.dart';
 import '../services/database_service.dart';
+import '../services/ambient_presets_service.dart';
 
 class AudiobookProvider with ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;
@@ -32,13 +33,38 @@ class AudiobookProvider with ChangeNotifier {
     }
   }
 
-  /// Charge toutes les musiques d'ambiance
+  /// Charge toutes les musiques d'ambiance + presets
   Future<void> loadAmbientMusic() async {
     try {
+      // Charger depuis la base de données
       _ambientMusic = await _db.getAllAmbientMusic();
+      
+      // Ajouter les presets s'ils ne sont pas déjà en base
+      await _initializePresets();
+      
       notifyListeners();
     } catch (e) {
       print('Erreur chargement musiques: $e');
+    }
+  }
+
+  /// Initialise les ambiances pré-packagées si nécessaire
+  Future<void> _initializePresets() async {
+    try {
+      final presets = AmbientPresetsService.getPresetAmbients();
+      
+      for (final preset in presets) {
+        // Vérifier si ce preset existe déjà
+        final exists = _ambientMusic.any((music) => music.filePath == preset.filePath);
+        
+        if (!exists) {
+          // Ajouter le preset à la base de données
+          await _db.insertAmbientMusic(preset);
+          _ambientMusic.add(preset);
+        }
+      }
+    } catch (e) {
+      print('Erreur initialisation presets: $e');
     }
   }
 

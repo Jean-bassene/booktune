@@ -30,10 +30,16 @@ class AudioPlayerService {
     }
   }
 
-  /// Charge une musique d'ambiance
+  /// Charge une musique d'ambiance (asset ou fichier local)
   Future<void> loadAmbientMusic(String filePath) async {
     try {
-      await _ambientPlayer.setFilePath(filePath);
+      if (filePath.startsWith('assets/')) {
+        // Charger depuis les assets
+        await _ambientPlayer.setAsset(filePath);
+      } else {
+        // Charger depuis le système de fichiers
+        await _ambientPlayer.setFilePath(filePath);
+      }
       // Configuration pour boucler
       await _ambientPlayer.setLoopMode(LoopMode.one);
       print('Musique d\'ambiance chargée: $filePath');
