@@ -22,9 +22,17 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Incrémenté pour migration
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Ajouter la colonne isFavorite si elle n'existe pas
+      await db.execute('ALTER TABLE audiobooks ADD COLUMN isFavorite INTEGER DEFAULT 0');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -42,7 +50,8 @@ class DatabaseService {
         coverArtPath TEXT,
         lastPosition $intType,
         dateImported $intType,
-        fileSize $intType
+        fileSize $intType,
+        isFavorite $intType DEFAULT 0
       )
     ''');
 

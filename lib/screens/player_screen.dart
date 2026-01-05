@@ -579,7 +579,7 @@ class PlayerScreen extends StatelessWidget {
                 return _buildAmbientChip(
                   context,
                   music.name,
-                  music.id!,
+                  music.id ?? 0, // Protection null
                   isSelected,
                   () => player.loadAndPlayAmbient(music),
                   audiobookProvider,
