@@ -16,8 +16,8 @@ class TtsProvider with ChangeNotifier {
   double _speechRate = 1.0;
   bool _isPremium = false;
 
-  // Freemium limits
-  static const int maxFreeYouTubeImports = 5;
+  // Freemium limits - supprimé car plus de YouTube
+  // static const int maxFreeYouTubeImports = 5;
 
   // Getters
   List<TextAudiobook> get textAudiobooks => _textAudiobooks;
@@ -27,11 +27,12 @@ class TtsProvider with ChangeNotifier {
   double get speechRate => _speechRate;
   bool get isPremium => _isPremium;
 
-  int get youtubeImportCount =>
-      _textAudiobooks.where((a) => a.sourceType == 'youtube').length;
-  bool get canImportYouTube =>
-      _isPremium || youtubeImportCount < maxFreeYouTubeImports;
-  int get youtubeImportsRemaining => maxFreeYouTubeImports - youtubeImportCount;
+  // YouTube supprimé
+  // int get youtubeImportCount =>
+  //     _textAudiobooks.where((a) => a.sourceType == 'youtube').length;
+  // bool get canImportYouTube =>
+  //     _isPremium || youtubeImportCount < maxFreeYouTubeImports;
+  // int get youtubeImportsRemaining => maxFreeYouTubeImports - youtubeImportCount;
 
   TtsProvider() {
     _init();
@@ -67,33 +68,6 @@ class TtsProvider with ChangeNotifier {
       }
     } catch (e) {
       print('Erreur import fichier texte: $e');
-    }
-  }
-
-  Future<bool> addYouTubeAudiobook(
-    String title,
-    String author,
-    String youtubeUrl,
-    double durationSeconds,
-  ) async {
-    if (!canImportYouTube) {
-      print('Limite YouTube atteinte. Passer à premium pour plus.');
-      return false;
-    }
-
-    try {
-      final audiobook = _importService.createYouTubeAudiobook(
-        title,
-        author,
-        youtubeUrl,
-        durationSeconds,
-      );
-      await _db.insertTextAudiobook(audiobook);
-      await loadTextAudiobooks();
-      return true;
-    } catch (e) {
-      print('Erreur ajout YouTube: $e');
-      return false;
     }
   }
 
