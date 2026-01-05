@@ -4,6 +4,7 @@ import '../providers/player_provider.dart';
 import '../providers/audiobook_provider.dart';
 import '../widgets/volume_slider.dart';
 import 'fullscreen_player_screen.dart';
+import 'ambient_presets_screen.dart';
 
 class PlayerScreen extends StatelessWidget {
   const PlayerScreen({super.key});
@@ -532,14 +533,33 @@ class PlayerScreen extends StatelessWidget {
                 ),
               ],
             ),
-            if (player.currentAmbientMusic != null)
-              TextButton(
-                onPressed: player.stopAmbient,
-                child: const Text(
-                  'Arrêter',
-                  style: TextStyle(color: Colors.red),
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AmbientPresetsScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.library_music, size: 16),
+                  label: const Text('Presets'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.purple.shade300,
+                  ),
                 ),
-              ),
+                if (player.currentAmbientMusic != null)
+                  TextButton(
+                    onPressed: player.stopAmbient,
+                    child: const Text(
+                      'Arrêter',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
         const SizedBox(height: 16),
