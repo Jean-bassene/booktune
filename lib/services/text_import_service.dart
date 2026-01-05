@@ -91,22 +91,20 @@ class TextImportService {
     return text.substring(position);
   }
 
-  /// Créer audiobook depuis YouTube (placeholder)
-  TextAudiobook createYouTubeAudiobook(
+  /// Créer audiobook depuis texte local
+  TextAudiobook createLocalTextAudiobook(
     String title,
     String author,
-    String youtubeUrl,
-    double durationSeconds,
+    String sourceType,
+    String content,
   ) {
     return TextAudiobook(
       title: title,
       author: author,
-      sourceType: 'youtube',
-      content: '[Contenu YouTube — lecture en streaming]',
-      totalCharacters: 0,
+      sourceType: sourceType,
+      content: content,
+      totalCharacters: content.length,
       dateImported: DateTime.now(),
-      youtubeUrl: youtubeUrl,
-      duration: durationSeconds,
     );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/tts_provider.dart';
 import '../models/text_audiobook.dart';
-import '../services/youtube_metadata_service.dart';
 
 class ImportTtsScreen extends StatefulWidget {
   const ImportTtsScreen({super.key});
@@ -109,46 +108,16 @@ class _ImportTtsScreenState extends State<ImportTtsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () => ttsProvider.importTextFile(),
                   icon: const Icon(Icons.upload_file),
-                  label: const Text('Importer TXT/EPUB'),
+                  label: const Text('Importer TXT/EPUB/PDF'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade500,
                     foregroundColor: Colors.white,
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _showYouTubeDialog(context, ttsProvider),
-                  icon: const Icon(Icons.play_circle),
-                  label: const Text('YouTube'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
             ],
           ),
-          if (!ttsProvider.isPremium && ttsProvider.youtubeImportCount > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade600.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${ttsProvider.youtubeImportsRemaining} imports YouTube restants (${ttsProvider.youtubeImportCount}/${TtsProvider.maxFreeYouTubeImports})',
-                  style: TextStyle(
-                    color: Colors.orange.shade200,
-                    fontSize: 12,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+
         ],
       ),
     );
@@ -175,7 +144,7 @@ class _ImportTtsScreenState extends State<ImportTtsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Importez des fichiers texte ou YouTube',
+            'Importez des fichiers texte (TXT, EPUB, PDF)',
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 14,
@@ -330,189 +299,6 @@ class _ImportTtsScreenState extends State<ImportTtsScreen> {
           ),
         );
       },
-    );
-  }
-
-  void _showYouTubeDialog(BuildContext context, TtsProvider ttsProvider) {
-    if (!ttsProvider.canImportYouTube) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Limite YouTube atteinte. Passer à premium pour plus.',
-          ),
-          backgroundColor: Colors.red.shade600,
-        ),
-      );
-      return;
-    }
-
-    final urlController = TextEditingController();
-    final titleController = TextEditingController();
-    final authorController = TextEditingController();
-    final durationController = TextEditingController();
-    bool isLoading = false;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Ajouter depuis YouTube'),
-          backgroundColor: Colors.grey.shade900,
-          titleTextStyle: const TextStyle(color: Colors.white),
-          contentTextStyle: const TextStyle(color: Colors.white),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: urlController,
-                  decoration: InputDecoration(
-                    labelText: 'Lien YouTube',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                    hintText: 'https://www.youtube.com/watch?v=...',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                    ),
-                    suffixIcon: isLoading
-                        ? const Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(Colors.blue),
-                              ),
-                            ),
-                          )
-                        : null,
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) async {
-                    if (YoutubeMetadataService.isValidYoutubeUrl(value)) {
-                      setState(() => isLoading = true);
-
-                      final metadata =
-                          await YoutubeMetadataService.getMetadata(value);
-
-                      if (metadata != null) {
-                        titleController.text = metadata.title;
-                        authorController.text = metadata.author;
-                        durationController.text =
-                            metadata.durationSeconds.toString();
-                      }
-
-                      setState(() => isLoading = false);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Titre',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: authorController,
-                  decoration: InputDecoration(
-                    labelText: 'Auteur/Channel',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                    ),
-                  ),
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: durationController,
-                  decoration: InputDecoration(
-                    labelText: 'Durée (secondes)',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                    ),
-                  ),
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade900.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    '💡 Collez une URL YouTube et les champs se remplissent automatiquement',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final success = await ttsProvider.addYouTubeAudiobook(
-                  titleController.text,
-                  authorController.text,
-                  urlController.text,
-                  double.tryParse(durationController.text) ?? 0,
-                );
-
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('YouTube ajouté avec succès'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Erreur : vérifiez l\'URL et les champs requis'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade600,
-              ),
-              child: const Text('Ajouter'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

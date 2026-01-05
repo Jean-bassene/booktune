@@ -8,7 +8,7 @@ class TextAudiobook {
   final int lastPosition; // Position en caractères
   final DateTime dateImported;
   final String? youtubeUrl;
-  final double duration; // Durée estimée en secondes (pour YouTube)
+  final double duration; // Durée estimée en secondes
 
   TextAudiobook({
     this.id,
