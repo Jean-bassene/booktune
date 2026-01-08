@@ -164,7 +164,8 @@ class PlayerProvider with ChangeNotifier {
     // Create a temporary Audiobook object for playback
     final tempAudiobook = Audiobook(
       // No ID as it's not in the local DB
-      title: chapter.title,
+      title:
+          _currentLibrivoxBook!.title, // Use the book title, not chapter title
       author: _currentLibrivoxBook!.author, // Use the full book author
       filePath: chapter.url,
       isNetwork: true,
