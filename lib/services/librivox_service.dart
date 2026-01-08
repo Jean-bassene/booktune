@@ -8,7 +8,7 @@ import 'logging_service.dart';
 class LibrivoxService {
   final http.Client _httpClient;
   final String _librivoxApiBaseUrl = 'https://librivox.org/api/feed/audiobooks';
-  final String _archiveBaseUrl = 'https://archive.org';
+  final String _rssBaseUrl = 'https://librivox.org/rss';
 
   LibrivoxService({required http.Client httpClient}) : _httpClient = httpClient;
 
@@ -71,113 +71,92 @@ class LibrivoxService {
     }
   }
 
-  /// Fetches the details for a single audiobook from the archive.org API.
+  /// Fetches book details and chapters from the RSS feed (au lieu de archive.org)
   Future<LibrivoxBook?> getBookDetails(String bookId) async {
     LoggingService.d('[getBookDetails] Début pour bookId: $bookId');
 
     try {
-      final url = Uri.parse('$_archiveBaseUrl/metadata/$bookId');
-      LoggingService.d('[getBookDetails] URL: $url');
+      // Utiliser le RSS pour obtenir les chapitres
+      final rssUrl = Uri.parse('$_rssBaseUrl/$bookId');
+      LoggingService.d('[getBookDetails] RSS URL: $rssUrl');
 
-      final response = await _httpClient.get(url);
+      final response = await _httpClient.get(rssUrl);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        // Vérifier les données de base
-        if (data == null || data is! Map<String, dynamic>) {
-          LoggingService.w(
-              '[getBookDetails] Données nulles ou invalides pour $bookId');
-          return null;
-        }
-
-        final server = data['server'];
-        final dir = data['dir'];
-        final metadata = data['metadata'];
-
-        if (server == null || dir == null || metadata == null) {
-          LoggingService.w(
-              '[getBookDetails] Métadonnées incomplètes pour $bookId');
-          LoggingService.d(
-              '[getBookDetails] server=$server, dir=$dir, metadata=${metadata?.runtimeType}');
-          return null;
-        }
-
-        LoggingService.d('[getBookDetails] Métadonnées valides pour $bookId');
-
-        // Extraire les fichiers
-        final dynamic filesData = data['files'];
-        List<Map<String, dynamic>> fileList = [];
-
-        if (filesData is Map<String, dynamic>) {
-          fileList =
-              filesData.values.whereType<Map<String, dynamic>>().toList();
-        } else if (filesData is List<dynamic>) {
-          fileList = filesData.whereType<Map<String, dynamic>>().toList();
-        }
-
-        LoggingService.d(
-            '[getBookDetails] ${fileList.length} fichiers trouvés');
-
-        // Chercher les fichiers MP3 avec différents formats
-        var mp3Files =
-            fileList.where((file) => file['format'] == '128Kbps MP3').toList();
-        if (mp3Files.isEmpty) {
-          mp3Files =
-              fileList.where((file) => file['format'] == '64Kbps MP3').toList();
-        }
-        if (mp3Files.isEmpty) {
-          mp3Files = fileList
-              .where(
-                  (file) => (file['format'] ?? '').toString().contains('MP3'))
-              .toList();
-        }
-
-        LoggingService.d(
-            '[getBookDetails] ${mp3Files.length} fichiers MP3 trouvés');
-
-        if (mp3Files.isEmpty) {
-          LoggingService.w('[getBookDetails] Aucun fichier MP3 pour $bookId');
-          return null;
-        }
-
-        // Trier par track
-        mp3Files.sort(
-            (a, b) => (a['track'] ?? '999').compareTo(b['track'] ?? '999'));
-
-        // Créer les chapitres
-        final chapters = <LibrivoxChapter>[];
-        for (var file in mp3Files) {
-          final trackNum = file['track']?.split('/').first ?? '0';
-          chapters.add(LibrivoxChapter(
-            title: file['title'] ?? 'Unknown Chapter',
-            url: 'https://$server$dir/${file['name']}',
-            trackNumber: int.tryParse(trackNum) ?? 0,
-            duration: _parseDuration(file['length']),
-          ));
-        }
-
-        final identifier = metadata['identifier'] ?? bookId;
-        LoggingService.i(
-            '[getBookDetails) Succès: "${metadata['title']}" avec ${chapters.length} chapitres');
-
-        return LibrivoxBook(
-          id: identifier,
-          title: metadata['title'] ?? 'Untitled',
-          author: _parseAuthor(metadata['creator']),
-          description: metadata['description']?.toString() ??
-              'No description available.',
-          language: metadata['language'] ?? 'Unknown',
-          coverUrl:
-              'https://archive.org/services/get-item-image.php?identifier=$identifier',
-          totalDuration: _parseDuration(metadata['runtime']),
-          chapters: chapters,
-        );
-      } else {
+      if (response.statusCode != 200) {
         LoggingService.e(
-            '[getBookDetails) Erreur HTTP ${response.statusCode} pour $bookId');
+            '[getBookDetails] Erreur HTTP ${response.statusCode} pour $bookId');
         return null;
       }
+
+      final xmlContent = response.body;
+
+      // Parser le titre
+      final titleMatch = RegExp(r'<title><!\[CDATA\[(.*?)\]\]></title>')
+          .firstMatch(xmlContent);
+      final title = titleMatch?.group(1) ?? 'Untitled';
+
+      // Parser l'auteur (itunes:author)
+      final authorMatch =
+          RegExp(r'<itunes:author><!\[CDATA\[(.*?)\]\]></itunes:author>')
+              .firstMatch(xmlContent);
+      final author = authorMatch?.group(1) ?? 'Unknown Author';
+
+      // Parser la description
+      final descMatch =
+          RegExp(r'<description><!\[CDATA\[(.*?)\]\]></description>')
+              .firstMatch(xmlContent);
+      final description = _stripHtmlTags(descMatch?.group(1) ?? '');
+
+      // Parser les chapitres depuis les items
+      final chapters = <LibrivoxChapter>[];
+      int chapterNum = 0;
+
+      // Extraire tous les items
+      final itemPattern = RegExp(
+        r'<item>.*?<title><!\[CDATA\[(.*?)\]\]></title>.*?<enclosure url="(.*?)".*?<itunes:duration>(.*?)</itunes:duration>',
+        dotAll: true,
+      );
+
+      for (final match in itemPattern.allMatches(xmlContent)) {
+        chapterNum++;
+        final itemTitle = match.group(1) ?? 'Unknown';
+        final url = match.group(2) ?? '';
+        final duration = match.group(3);
+
+        if (url.isNotEmpty && url.endsWith('.mp3')) {
+          chapters.add(LibrivoxChapter(
+            title: 'Chapter $chapterNum: $itemTitle',
+            url: url,
+            trackNumber: chapterNum,
+            duration: _parseDuration(duration),
+          ));
+        }
+      }
+
+      if (chapters.isEmpty) {
+        LoggingService.w('[getBookDetails] Aucun chapitre trouvé pour $bookId');
+        return null;
+      }
+
+      LoggingService.i(
+          '[getBookDetails] Succès: "$title" avec ${chapters.length} chapitres');
+
+      // Calculer la durée totale
+      final totalDuration = chapters.fold<Duration>(
+        Duration.zero,
+        (sum, c) => sum + c.duration,
+      );
+
+      return LibrivoxBook(
+        id: bookId,
+        title: title,
+        author: author,
+        description: description,
+        language: 'English',
+        coverUrl: null,
+        totalDuration: totalDuration,
+        chapters: chapters,
+      );
     } catch (e, stackTrace) {
       LoggingService.e(
           '[getBookDetails) Exception pour $bookId', e, stackTrace);
@@ -185,13 +164,9 @@ class LibrivoxService {
     }
   }
 
-  /// Parse l'auteur (peut être une liste ou une chaîne)
-  String _parseAuthor(dynamic creator) {
-    if (creator == null) return 'Unknown Author';
-    if (creator is List) {
-      return creator.join(', ');
-    }
-    return creator.toString();
+  /// Supprime les balises HTML d'une chaîne
+  String _stripHtmlTags(String html) {
+    return html.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 
   /// Parse une chaîne de durée en Duration
@@ -201,6 +176,7 @@ class LibrivoxService {
     }
 
     try {
+      // Format HH:MM:SS ou MM:SS
       if (durationString.contains(':')) {
         final parts = durationString.split(':');
         if (parts.length == 3) {
@@ -215,6 +191,7 @@ class LibrivoxService {
         }
       }
 
+      // Format secondes simples
       final seconds = double.tryParse(durationString);
       if (seconds != null) {
         return Duration(milliseconds: (seconds * 1000).round());
