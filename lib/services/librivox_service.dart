@@ -41,28 +41,34 @@ class LibrivoxService {
   }
 
   /// Searches for audiobooks on LibriVox using the LibriVox API.
+  /// Note: LibriVox a supprimé l'endpoint /search, on utilise une recherche locale
   Future<List<LibrivoxBook>> searchBooks(String query) async {
     try {
-      final encodedQuery = Uri.encodeComponent(query);
-      final url = Uri.parse(
-          '$_librivoxApiBaseUrl/search?title=$encodedQuery&format=json');
-
+      // Charger les livres récents et filtrer côté client
+      final url = Uri.parse('$_librivoxApiBaseUrl?format=json');
       final response = await _httpClient.get(url);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<LibrivoxBook> books = [];
+        final queryLower = query.toLowerCase();
+
         if (data != null && data['books'] is List) {
           for (final bookData in data['books']) {
             if (bookData['id'] != null) {
-              books.add(LibrivoxBook.fromLibrivoxApiJson(bookData));
+              final book = LibrivoxBook.fromLibrivoxApiJson(bookData);
+              // Filtrer par titre ou auteur
+              if (book.title.toLowerCase().contains(queryLower) ||
+                  book.author.toLowerCase().contains(queryLower)) {
+                books.add(book);
+              }
             }
           }
         }
         LoggingService.i('Recherche "$query": ${books.length} résultats');
         return books;
       } else {
-        LoggingService.e('Erreur recherche API: status ${response.statusCode}');
+        LoggingService.e('Erreur API LibriVox: status ${response.statusCode}');
         throw Exception('Failed to search books from LibriVox API');
       }
     } catch (e) {
