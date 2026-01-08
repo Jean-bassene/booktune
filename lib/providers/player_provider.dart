@@ -36,6 +36,24 @@ class PlayerProvider with ChangeNotifier {
   Audiobook? get currentAudiobook => _currentAudiobook;
   LibrivoxBook? get currentLibrivoxBook => _currentLibrivoxBook;
   int get currentLibrivoxChapterIndex => _currentLibrivoxChapterIndex;
+
+  /// Vérifie s'il y a un chapitre suivant
+  bool get hasNextChapter {
+    if (_currentLibrivoxBook == null || _currentLibrivoxChapterIndex == -1) {
+      return false;
+    }
+    return _currentLibrivoxChapterIndex + 1 <
+        _currentLibrivoxBook!.chapters.length;
+  }
+
+  /// Vérifie s'il y a un chapitre précédent
+  bool get hasPreviousChapter {
+    if (_currentLibrivoxBook == null || _currentLibrivoxChapterIndex <= 0) {
+      return false;
+    }
+    return true;
+  }
+
   AmbientMusic? get currentAmbientMusic => _currentAmbientMusic;
   Duration get position => _position;
   Duration get duration => _duration;

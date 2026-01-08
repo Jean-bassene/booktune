@@ -251,6 +251,26 @@ class PlayerScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        // Chapitre précédent
+        Container(
+          decoration: BoxDecoration(
+            color: (player.hasPreviousChapter)
+                ? Colors.white.withOpacity(0.1)
+                : Colors.white.withOpacity(0.05),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            onPressed:
+                player.hasPreviousChapter ? player.playPreviousChapter : null,
+            icon: const Icon(Icons.skip_previous),
+            color: (player.hasPreviousChapter)
+                ? Colors.white
+                : Colors.white.withOpacity(0.3),
+            iconSize: 32,
+          ),
+        ),
+        const SizedBox(width: 12),
+
         // Reculer 15s
         Container(
           decoration: BoxDecoration(
@@ -305,6 +325,25 @@ class PlayerScreen extends StatelessWidget {
             onPressed: player.skipForward,
             icon: const Icon(Icons.forward_10),
             color: Colors.white,
+            iconSize: 32,
+          ),
+        ),
+        const SizedBox(width: 12),
+
+        // Chapitre suivant
+        Container(
+          decoration: BoxDecoration(
+            color: (player.hasNextChapter)
+                ? Colors.white.withOpacity(0.1)
+                : Colors.white.withOpacity(0.05),
+            shape: BoxShape.circle,
+          ),
+          child: IconButton(
+            onPressed: player.hasNextChapter ? player.playNextChapter : null,
+            icon: const Icon(Icons.skip_next),
+            color: (player.hasNextChapter)
+                ? Colors.white
+                : Colors.white.withOpacity(0.3),
             iconSize: 32,
           ),
         ),
