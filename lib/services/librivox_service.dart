@@ -111,23 +111,42 @@ class LibrivoxService {
       final chapters = <LibrivoxChapter>[];
       int chapterNum = 0;
 
-      // Extraire tous les items (en excluant les balises CDATA)
-      final itemPattern = RegExp(
-        r'<item>.*?<title><!\[CDATA\[(.*?)\]\]></title>.*?<enclosure url="(.*?)".*?<itunes:duration><!\[CDATA\[(.*?)\]\]></itunes:duration>',
-        dotAll: true,
-      );
+      // Extraire les URLs MP3 et titres séparément (plus robuste)
+      final urlPattern = RegExp(r'<enclosure url="(.*?\.mp3)"');
+      final titlePattern =
+          RegExp(r'<item>.*?<title><!\[CDATA\[(.*?)\]\]></title>');
+      final durationPattern =
+          RegExp(r'<itunes:duration><!\[CDATA\[(.*?)\]\]></itunes:duration>');
 
-      for (final match in itemPattern.allMatches(xmlContent)) {
-        chapterNum++;
-        final itemTitle = match.group(1) ?? 'Unknown';
-        final url = match.group(2) ?? '';
-        final duration = match.group(3);
+      // Trouver tous les matches d'URLs
+      final urls =
+          urlPattern.allMatches(xmlContent).map((m) => m.group(1)!).toList();
 
-        if (url.isNotEmpty && url.endsWith('.mp3')) {
+      // Trouver tous les titres
+      final titles =
+          titlePattern.allMatches(xmlContent).map((m) => m.group(1)!).toList();
+
+      // Trouver toutes les durées
+      final durations = durationPattern
+          .allMatches(xmlContent)
+          .map((m) => m.group(1)!)
+          .toList();
+
+      LoggingService.d(
+          '[getBookDetails] URLs trouvées: ${urls.length}, Titres: ${titles.length}, Durées: ${durations.length}');
+
+      // Combiner les résultats
+      final count = urls.length;
+      for (int i = 0; i < count; i++) {
+        final url = urls[i];
+        final title = i < titles.length ? titles[i] : 'Chapter ${i + 1}';
+        final duration = i < durations.length ? durations[i] : '';
+
+        if (url.isNotEmpty) {
           chapters.add(LibrivoxChapter(
-            title: 'Chapter $chapterNum: $itemTitle',
+            title: 'Chapter ${i + 1}: $title',
             url: url,
-            trackNumber: chapterNum,
+            trackNumber: i + 1,
             duration: _parseDuration(duration),
           ));
         }
