@@ -187,19 +187,7 @@ class PlayerScreen extends StatelessWidget {
             ),
           ),
         ],
-        if (player.currentChapterTitle != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            player.currentChapterTitle!,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+
       ],
     );
   }
