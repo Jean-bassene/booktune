@@ -111,9 +111,9 @@ class LibrivoxService {
       final chapters = <LibrivoxChapter>[];
       int chapterNum = 0;
 
-      // Extraire tous les items
+      // Extraire tous les items (en excluant les balises CDATA)
       final itemPattern = RegExp(
-        r'<item>.*?<title><!\[CDATA\[(.*?)\]\]></title>.*?<enclosure url="(.*?)".*?<itunes:duration>(.*?)</itunes:duration>',
+        r'<item>.*?<title><!\[CDATA\[(.*?)\]\]></title>.*?<enclosure url="(.*?)".*?<itunes:duration><!\[CDATA\[(.*?)\]\]></itunes:duration>',
         dotAll: true,
       );
 
