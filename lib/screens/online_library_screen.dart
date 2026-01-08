@@ -15,10 +15,26 @@ class OnlineLibraryScreen extends StatefulWidget {
 class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
   final TextEditingController _searchController = TextEditingController();
 
-  List<LibrivoxBook> _books = [];
+  List<LibrivoxBook> _allBooks = []; // Tous les livres chargés
+  List<LibrivoxBook> _books = []; // Livres filtrés
   bool _isLoading = true;
   bool _isSearch = false;
-  LibrivoxBook? _playingBook; // Track which book is currently trying to play
+  LibrivoxBook? _playingBook;
+
+  // Filtres
+  String? _selectedLanguage;
+  final List<String> _supportedLanguages = [
+    'All',
+    'English',
+    'French',
+    'Spanish',
+    'German',
+    'Italian',
+    'Portuguese',
+    'Russian',
+    'Chinese',
+    'Japanese',
+  ];
 
   @override
   void initState() {
@@ -30,7 +46,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
 
   Future<void> _playBook(LibrivoxBook book) async {
     setState(() {
-      _playingBook = book; // Set the book being processed for playing
+      _playingBook = book;
     });
 
     try {
@@ -62,7 +78,6 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
         return;
       }
 
-      // Load and play the first chapter
       context.read<PlayerProvider>().loadAndPlayLibrivoxChapter(
           fullBookDetails, fullBookDetails.chapters.first);
 
@@ -87,7 +102,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          _playingBook = null; // Clear the playing state
+          _playingBook = null;
         });
       }
     }
@@ -106,7 +121,8 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       final results = await librivoxService.getRecentBooks();
       if (mounted) {
         setState(() {
-          _books = results;
+          _allBooks = results;
+          _applyFilters();
         });
       }
     } catch (e) {
@@ -125,6 +141,18 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
         });
       }
     }
+  }
+
+  void _applyFilters() {
+    setState(() {
+      if (_selectedLanguage == null || _selectedLanguage == 'All') {
+        _books = _allBooks;
+      } else {
+        _books = _allBooks
+            .where((book) => book.language == _selectedLanguage)
+            .toList();
+      }
+    });
   }
 
   Future<void> _performSearch() async {
@@ -146,7 +174,8 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       final results = await librivoxService.searchBooks(query);
       if (mounted) {
         setState(() {
-          _books = results;
+          _allBooks = results;
+          _applyFilters();
         });
       }
     } catch (e) {
@@ -225,44 +254,44 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
             ),
             onSubmitted: (_) => _performSearch(),
           ),
-          // const SizedBox(height: 12),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     Text('Language:', style: TextStyle(color: Colors.white70)),
-          //     const SizedBox(width: 10),
-          //     Container(
-          //       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          //       decoration: BoxDecoration(
-          //         color: Colors.white.withOpacity(0.1),
-          //         borderRadius: BorderRadius.circular(8),
-          //       ),
-          //       child: DropdownButton<String>(
-          //         value: _selectedLanguage,
-          //         dropdownColor: Colors.purple.shade800,
-          //         style: const TextStyle(color: Colors.white),
-          //         underline: const SizedBox(),
-          //         icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
-          //         items: _supportedLanguages.map((String value) {
-          //           return DropdownMenuItem<String>(
-          //             value: value,
-          //             child: Text(value),
-          //           );
-          //         }).toList(),
-          //         onChanged: (String? newValue) {
-          //           if (newValue != null) {
-          //             setState(() {
-          //               _selectedLanguage = newValue;
-          //             });
-          //             if (_searchController.text.isNotEmpty) {
-          //               _performSearch();
-          //             }
-          //           }
-          //         },
-          //       ),
-          //     ),
-          //   ],
-          // ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Language:', style: TextStyle(color: Colors.white70)),
+              const SizedBox(width: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: DropdownButton<String>(
+                  value: _selectedLanguage ?? 'All',
+                  dropdownColor: Colors.purple.shade800,
+                  style: const TextStyle(color: Colors.white),
+                  underline: const SizedBox(),
+                  icon:
+                      const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                  items: _supportedLanguages.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedLanguage = newValue == 'All' ? null : newValue;
+                        _applyFilters();
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -276,7 +305,11 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
     if (_books.isEmpty) {
       return Center(
         child: Text(
-          _isSearch ? 'No results found.' : 'Could not load recent books.',
+          _isSearch
+              ? 'No results found.'
+              : _selectedLanguage != null
+                  ? 'No books found in this language.'
+                  : 'Could not load recent books.',
           style: const TextStyle(color: Colors.white70, fontSize: 16),
         ),
       );
