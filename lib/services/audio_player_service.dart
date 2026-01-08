@@ -14,6 +14,11 @@ class AudioPlayerService {
   Stream<PlayerState> get playerStateStream =>
       _audiobookPlayer.playerStateStream;
 
+  // Stream pour détecter la fin de la lecture
+  Stream<bool> get playbackCompletedStream =>
+      _audiobookPlayer.playbackEventStream
+          .map((event) => event.processingState == ProcessingState.completed);
+
   // État actuel
   bool get isPlaying => _audiobookPlayer.playing;
   Duration get position => _audiobookPlayer.position;

@@ -31,6 +31,7 @@ class PlayerProvider with ChangeNotifier {
   StreamSubscription? _positionSubscription;
   StreamSubscription? _durationSubscription;
   StreamSubscription? _stateSubscription;
+  StreamSubscription? _playerCompletedSubscription;
 
   // Getters
   Audiobook? get currentAudiobook => _currentAudiobook;
@@ -52,6 +53,22 @@ class PlayerProvider with ChangeNotifier {
       return false;
     }
     return true;
+  }
+
+  /// Retourne "1/7" pour le chapitre actuel
+  String get chapterInfo {
+    if (_currentLibrivoxBook == null || _currentLibrivoxChapterIndex == -1) {
+      return '';
+    }
+    return '${_currentLibrivoxChapterIndex + 1}/${_currentLibrivoxBook!.chapters.length}';
+  }
+
+  /// Retourne le titre du chapitre actuel
+  String? get currentChapterTitle {
+    if (_currentLibrivoxBook == null || _currentLibrivoxChapterIndex == -1) {
+      return null;
+    }
+    return _currentLibrivoxBook!.chapters[_currentLibrivoxChapterIndex].title;
   }
 
   AmbientMusic? get currentAmbientMusic => _currentAmbientMusic;
@@ -86,6 +103,15 @@ class PlayerProvider with ChangeNotifier {
     _stateSubscription = _audioService.playerStateStream.listen((state) {
       _isPlaying = state.playing;
       notifyListeners();
+    });
+
+    // Écouter la fin de la lecture pour passer au chapitre suivant
+    _playerCompletedSubscription =
+        _audioService.playbackCompletedStream.listen((completed) {
+      if (completed && _currentLibrivoxBook != null) {
+        debugPrint('Chapitre terminé, passage au suivant...');
+        playNextChapter();
+      }
     });
   }
 
@@ -297,6 +323,7 @@ class PlayerProvider with ChangeNotifier {
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
     _stateSubscription?.cancel();
+    _playerCompletedSubscription?.cancel();
     _audioService.dispose();
     super.dispose();
   }

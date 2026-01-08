@@ -58,7 +58,7 @@ class PlayerScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      _buildArtwork(context, player),
+                      _buildArtwork(player),
                       const SizedBox(height: 30),
                       _buildTitle(player),
                       const SizedBox(height: 30),
@@ -116,60 +116,33 @@ class PlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildArtwork(BuildContext context, PlayerProvider player) {
-    return Stack(
-      alignment: Alignment.topRight,
-      children: [
-        Container(
-          width: 280,
-          height: 280,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.purple.shade600,
-                Colors.indigo.shade800,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.purple.shade900.withOpacity(0.5),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.book,
-            size: 120,
-            color: Colors.white,
-          ),
+  Widget _buildArtwork(PlayerProvider player) {
+    return Container(
+      width: 280,
+      height: 280,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.purple.shade600,
+            Colors.indigo.shade800,
+          ],
         ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.fullscreen),
-              color: Colors.white,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const FullscreenPlayerScreen(),
-                  ),
-                );
-              },
-            ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.shade900.withOpacity(0.5),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
           ),
-        ),
-      ],
+        ],
+      ),
+      child: const Icon(
+        Icons.book,
+        size: 120,
+        color: Colors.white,
+      ),
     );
   }
 
@@ -180,22 +153,53 @@ class PlayerScreen extends StatelessWidget {
           player.currentAudiobook!.title,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         Text(
           player.currentAudiobook!.author,
           style: const TextStyle(
             color: Colors.white70,
-            fontSize: 16,
+            fontSize: 15,
           ),
           textAlign: TextAlign.center,
         ),
+        if (player.chapterInfo.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.purple.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Chapitre ${player.chapterInfo}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+        if (player.currentChapterTitle != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            player.currentChapterTitle!,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ],
     );
   }
