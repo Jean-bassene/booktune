@@ -14,7 +14,7 @@ class OnlineLibraryScreen extends StatefulWidget {
 
 class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<LibrivoxBook> _books = [];
   bool _isLoading = true;
   bool _isSearch = false;
@@ -34,7 +34,8 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
     });
 
     try {
-      final librivoxService = Provider.of<LibrivoxService>(context, listen: false);
+      final librivoxService =
+          Provider.of<LibrivoxService>(context, listen: false);
       final fullBookDetails = await librivoxService.getBookDetails(book.id);
 
       if (fullBookDetails == null) {
@@ -62,12 +63,14 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       }
 
       // Load and play the first chapter
-      context.read<PlayerProvider>().loadAndPlayLibrivoxChapter(fullBookDetails, fullBookDetails.chapters.first);
+      context.read<PlayerProvider>().loadAndPlayLibrivoxChapter(
+          fullBookDetails, fullBookDetails.chapters.first);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Playing "${fullBookDetails.chapters.first.title}" from "${fullBookDetails.title}"...'),
+            content: Text(
+                'Playing "${fullBookDetails.chapters.first.title}" from "${fullBookDetails.title}"...'),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -98,7 +101,8 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
     });
 
     try {
-      final librivoxService = Provider.of<LibrivoxService>(context, listen: false);
+      final librivoxService =
+          Provider.of<LibrivoxService>(context, listen: false);
       final results = await librivoxService.getRecentBooks();
       if (mounted) {
         setState(() {
@@ -137,7 +141,8 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
     });
 
     try {
-      final librivoxService = Provider.of<LibrivoxService>(context, listen: false);
+      final librivoxService =
+          Provider.of<LibrivoxService>(context, listen: false);
       final results = await librivoxService.searchBooks(query);
       if (mounted) {
         setState(() {
@@ -284,7 +289,10 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Text(
             _isSearch ? 'Search Results' : 'Recently Added',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white),
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(color: Colors.white),
           ),
         ),
         Expanded(
@@ -301,17 +309,35 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                           book.coverUrl!,
                           width: 50,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => 
-                            const Icon(Icons.book, color: Colors.white),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.book, color: Colors.white),
                         )
                       : const Icon(Icons.book, color: Colors.white),
-                  title: Text(book.title, style: const TextStyle(color: Colors.white)),
+                  title: Text(book.title,
+                      style: const TextStyle(color: Colors.white)),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(book.author, style: const TextStyle(color: Colors.white70)),
-                      if (book.language != null) // Only show if language is available
-                        Text('Language: ${book.language}', style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                      Text(book.author,
+                          style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              book.language ?? 'Unknown',
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 11),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   onTap: () => _playBook(book),

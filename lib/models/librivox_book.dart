@@ -36,9 +36,11 @@ class LibrivoxBook {
       id: json['identifier'],
       title: json['title'] ?? 'Untitled',
       author: author,
-      description: json['description']?.toString() ?? 'No description available.',
+      description:
+          json['description']?.toString() ?? 'No description available.',
       language: json['language']?.toString() ?? 'Unknown',
-      coverUrl: 'https://archive.org/services/get-item-image.php?identifier=${json['identifier']}',
+      coverUrl:
+          'https://archive.org/services/get-item-image.php?identifier=${json['identifier']}',
     );
   }
 
@@ -47,37 +49,45 @@ class LibrivoxBook {
     String author = 'Unknown Author';
     if (json['authors'] != null && json['authors'] is List) {
       final List<dynamic> authorsList = json['authors'];
-      author = authorsList.map((a) {
-        final firstName = a['first_name'] ?? '';
-        final lastName = a['last_name'] ?? '';
-        return '$firstName $lastName'.trim();
-      }).where((name) => name.isNotEmpty).join(', ');
+      author = authorsList
+          .map((a) {
+            final firstName = a['first_name'] ?? '';
+            final lastName = a['last_name'] ?? '';
+            return '$firstName $lastName'.trim();
+          })
+          .where((name) => name.isNotEmpty)
+          .join(', ');
       if (author.isEmpty) {
         author = 'Unknown Author';
       }
     }
 
     String librivoxId = json['id']?.toString() ?? '';
-    String archiveOrgIdentifier = librivoxId; // Default to librivoxId
+    String archiveOrgIdentifier = librivoxId;
 
     // Try to extract archive.org identifier from url_iarchive
     final String? urlIArchive = json['url_iarchive'];
     if (urlIArchive != null && urlIArchive.isNotEmpty) {
-      // Example: https://archive.org/details/some_identifier
       final uri = Uri.tryParse(urlIArchive);
       if (uri != null && uri.pathSegments.isNotEmpty) {
         archiveOrgIdentifier = uri.pathSegments.last;
       }
     }
 
+    // Extraire la langue depuis le champ 'language' de l'API
+    String language = 'Unknown';
+    if (json['language'] != null) {
+      language = json['language'].toString();
+    }
+
     return LibrivoxBook(
-      id: archiveOrgIdentifier, // Use archive.org identifier here
+      id: archiveOrgIdentifier,
       title: json['title'] ?? 'Untitled',
       author: author,
-      description: json['description']?.toString() ?? 'No description available.',
-      language: null, // Language not available from LibriVox API search results directly
+      description:
+          json['description']?.toString() ?? 'No description available.',
+      language: language,
       librivoxUrl: json['url_librivox'],
-      // coverUrl, language, totalDuration, chapters will be null and filled by archive.org details
     );
   }
 }
