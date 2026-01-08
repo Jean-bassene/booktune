@@ -37,7 +37,7 @@ class PlayerScreen extends StatelessWidget {
                 if (details.primaryVelocity != null &&
                     details.primaryVelocity! < -500) {
                   final newPosition = player.position.inSeconds + 30;
-                  final maxDuration = player.currentAudiobook!.duration;
+                  final maxDuration = player.currentAudiobook!.duration ?? 0;
                   if (newPosition <= maxDuration) {
                     player.seek(Duration(seconds: newPosition));
                   }

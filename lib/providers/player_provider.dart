@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import '../models/audiobook.dart';
 import '../models/ambient_music.dart';
+import '../models/librivox_book.dart';
 import '../services/audio_player_service.dart';
+import '../services/logging_service.dart';
 import 'audiobook_provider.dart';
 import 'dart:async';
 
@@ -10,6 +12,9 @@ class PlayerProvider with ChangeNotifier {
   AudiobookProvider? _audiobookProvider;
 
   Audiobook? _currentAudiobook;
+  LibrivoxBook?
+      _currentLibrivoxBook; // To store the currently playing LibriVox book
+  int _currentLibrivoxChapterIndex = -1; // To track the current chapter index
   AmbientMusic? _currentAmbientMusic;
 
   Duration _position = Duration.zero;
@@ -23,15 +28,14 @@ class PlayerProvider with ChangeNotifier {
   Timer? _sleepTimer;
   int _sleepTimerMinutes = 0;
 
-  // Position save timer
-  Timer? _positionSaveTimer;
-
   StreamSubscription? _positionSubscription;
   StreamSubscription? _durationSubscription;
   StreamSubscription? _stateSubscription;
 
   // Getters
   Audiobook? get currentAudiobook => _currentAudiobook;
+  LibrivoxBook? get currentLibrivoxBook => _currentLibrivoxBook;
+  int get currentLibrivoxChapterIndex => _currentLibrivoxChapterIndex;
   AmbientMusic? get currentAmbientMusic => _currentAmbientMusic;
   Duration get position => _position;
   Duration get duration => _duration;
@@ -73,38 +77,87 @@ class PlayerProvider with ChangeNotifier {
       _currentAudiobook = audiobook;
       notifyListeners();
 
-      await _audioService.loadAudiobook(audiobook.filePath);
+      await _audioService.loadAudiobook(
+        audiobook.filePath,
+        isNetwork: audiobook.isNetwork,
+      );
 
-      // Reprendre à la dernière position
-      if (audiobook.lastPosition > 0) {
+      // Reprendre à la dernière position pour les livres locaux
+      if (!audiobook.isNetwork && audiobook.lastPosition > 0) {
         await _audioService.seek(Duration(seconds: audiobook.lastPosition));
       }
 
       await _audioService.setAudiobookVolume(_audiobookVolume);
       await _audioService.play();
-
-      // Démarrer la sauvegarde automatique de position toutes les 5 secondes
-      _startPositionSaving();
     } catch (e) {
-      print('Erreur chargement audiobook: $e');
+      debugPrint('Erreur chargement audiobook: $e');
     }
   }
 
-  /// Démarrer la sauvegarde automatique de position
-  void _startPositionSaving() {
-    _positionSaveTimer?.cancel();
-    _positionSaveTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
-      if (_currentAudiobook != null && _position.inSeconds > 0) {
-        try {
-          _audiobookProvider?.updatePosition(
-            _currentAudiobook!.id!,
-            _position.inSeconds,
-          );
-        } catch (e) {
-          print('Erreur sauvegarde position: $e');
-        }
-      }
-    });
+  /// Charge et joue un chapitre d'un livre LibriVox
+  Future<void> loadAndPlayLibrivoxChapter(
+      LibrivoxBook book, LibrivoxChapter chapter) async {
+    _currentLibrivoxBook = book;
+    _currentLibrivoxChapterIndex = book.chapters.indexOf(chapter);
+    if (_currentLibrivoxChapterIndex == -1) {
+      _currentLibrivoxChapterIndex =
+          0; // Fallback to first chapter if not found
+    }
+    await _loadAndPlayLibrivoxChapterAtIndex();
+  }
+
+  /// Helper to load and play the chapter at _currentLibrivoxChapterIndex
+  Future<void> _loadAndPlayLibrivoxChapterAtIndex() async {
+    if (_currentLibrivoxBook == null ||
+        _currentLibrivoxChapterIndex == -1 ||
+        _currentLibrivoxChapterIndex >= _currentLibrivoxBook!.chapters.length) {
+      debugPrint('No LibriVox book or invalid chapter index to play.');
+      return;
+    }
+
+    final chapter =
+        _currentLibrivoxBook!.chapters[_currentLibrivoxChapterIndex];
+    // Create a temporary Audiobook object for playback
+    final tempAudiobook = Audiobook(
+      // No ID as it's not in the local DB
+      title: chapter.title,
+      author: _currentLibrivoxBook!.author, // Use the full book author
+      filePath: chapter.url,
+      isNetwork: true,
+      duration: chapter.duration.inSeconds,
+    );
+    await loadAndPlayAudiobook(tempAudiobook);
+    notifyListeners(); // Notify listeners that the chapter has changed
+  }
+
+  /// Joue le chapitre suivant du livre LibriVox en cours
+  Future<void> playNextChapter() async {
+    if (_currentLibrivoxBook == null || _currentLibrivoxChapterIndex == -1) {
+      return;
+    }
+    if (_currentLibrivoxChapterIndex + 1 <
+        _currentLibrivoxBook!.chapters.length) {
+      _currentLibrivoxChapterIndex++;
+      await _loadAndPlayLibrivoxChapterAtIndex();
+    } else {
+      debugPrint('Reached the end of the book.');
+      // Optionnel: arrêter la lecture ou boucler
+    }
+  }
+
+  /// Joue le chapitre précédent du livre LibriVox en cours
+  Future<void> playPreviousChapter() async {
+    if (_currentLibrivoxBook == null || _currentLibrivoxChapterIndex == -1) {
+      return;
+    }
+    if (_currentLibrivoxChapterIndex - 1 >= 0) {
+      _currentLibrivoxChapterIndex--;
+      await _loadAndPlayLibrivoxChapterAtIndex();
+    } else {
+      debugPrint('Reached the beginning of the book.');
+      // Optionnel: revenir au début du chapitre actuel ou du livre
+      await seek(Duration.zero); // Revenir au début du chapitre actuel
+    }
   }
 
   /// Setter pour AudiobookProvider
@@ -125,7 +178,7 @@ class PlayerProvider with ChangeNotifier {
         await _audioService.play();
       }
     } catch (e) {
-      print('Erreur chargement musique: $e');
+      debugPrint('Erreur chargement musique: $e');
     }
   }
 
@@ -138,10 +191,26 @@ class PlayerProvider with ChangeNotifier {
 
   /// Lecture / Pause
   Future<void> togglePlayPause() async {
+    if (_currentAudiobook == null) return;
+
     if (_isPlaying) {
       await _audioService.pause();
+      // Sauvegarder la position à la pause
+      await _saveCurrentPosition();
     } else {
       await _audioService.play();
+    }
+  }
+
+  /// Sauvegarde la position actuelle du livre en cours
+  Future<void> _saveCurrentPosition() async {
+    if (_currentAudiobook != null &&
+        _currentAudiobook!.id != null &&
+        _position.inSeconds > 0) {
+      await _audiobookProvider?.updatePosition(
+        _currentAudiobook!.id!,
+        _position.inSeconds,
+      );
     }
   }
 
@@ -206,7 +275,7 @@ class PlayerProvider with ChangeNotifier {
   @override
   void dispose() {
     _sleepTimer?.cancel();
-    _positionSaveTimer?.cancel();
+    _saveCurrentPosition(); // Sauvegarde finale avant de quitter
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
     _stateSubscription?.cancel();

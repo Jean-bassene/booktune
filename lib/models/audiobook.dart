@@ -3,24 +3,26 @@ class Audiobook {
   final String title;
   final String author;
   final String filePath;
-  final int duration; // en secondes
+  final int? duration; // en secondes
   final String? coverArtPath;
   final int lastPosition; // en secondes
   final DateTime dateImported;
-  final int fileSize;
+  final int? fileSize;
   final bool isFavorite;
+  final bool isNetwork;
 
   Audiobook({
     this.id,
     required this.title,
     required this.author,
     required this.filePath,
-    required this.duration,
+    this.duration,
     this.coverArtPath,
     this.lastPosition = 0,
     DateTime? dateImported,
-    required this.fileSize,
+    this.fileSize,
     this.isFavorite = false,
+    this.isNetwork = false,
   }) : dateImported = dateImported ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -35,6 +37,7 @@ class Audiobook {
       'dateImported': dateImported.millisecondsSinceEpoch,
       'fileSize': fileSize,
       'isFavorite': isFavorite ? 1 : 0,
+      'isNetwork': isNetwork ? 1 : 0,
     };
   }
 
@@ -50,6 +53,7 @@ class Audiobook {
       dateImported: DateTime.fromMillisecondsSinceEpoch(map['dateImported']),
       fileSize: map['fileSize'],
       isFavorite: (map['isFavorite'] ?? 0) == 1,
+      isNetwork: (map['isNetwork'] ?? 0) == 1,
     );
   }
 
@@ -64,6 +68,7 @@ class Audiobook {
     DateTime? dateImported,
     int? fileSize,
     bool? isFavorite,
+    bool? isNetwork,
   }) {
     return Audiobook(
       id: id ?? this.id,
@@ -76,6 +81,7 @@ class Audiobook {
       dateImported: dateImported ?? this.dateImported,
       fileSize: fileSize ?? this.fileSize,
       isFavorite: isFavorite ?? this.isFavorite,
+      isNetwork: isNetwork ?? this.isNetwork,
     );
   }
 }

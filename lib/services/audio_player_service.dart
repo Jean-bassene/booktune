@@ -19,11 +19,15 @@ class AudioPlayerService {
   Duration get position => _audiobookPlayer.position;
   Duration? get duration => _audiobookPlayer.duration;
 
-  /// Charge un livre audio
-  Future<void> loadAudiobook(String filePath) async {
+  /// Charge un livre audio (local ou réseau)
+  Future<void> loadAudiobook(String path, {bool isNetwork = false}) async {
     try {
-      await _audiobookPlayer.setFilePath(filePath);
-      print('Livre audio chargé: $filePath');
+      if (isNetwork) {
+        await _audiobookPlayer.setUrl(path);
+      } else {
+        await _audiobookPlayer.setFilePath(path);
+      }
+      print('Livre audio chargé: $path');
     } catch (e) {
       print('Erreur chargement livre audio: $e');
       rethrow;

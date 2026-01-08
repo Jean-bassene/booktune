@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/audiobook_provider.dart';
 import '../providers/player_provider.dart';
+import '../models/audiobook.dart'; // Import direct pour Audiobook
+import '../models/ambient_music.dart'; // Import direct pour AmbientMusic
 import '../services/file_import_service.dart';
 
 class LibraryScreen extends StatefulWidget {
-  const LibraryScreen({Key? key}) : super(key: key);
+  const LibraryScreen({super.key});
 
   @override
   State<LibraryScreen> createState() => _LibraryScreenState();
@@ -180,18 +182,17 @@ class _LibraryScreenState extends State<LibraryScreen>
     return Consumer<AudiobookProvider>(
       builder: (context, provider, child) {
         // Trier les livres par dernière position (avec position > 0) ou par date d'import
-        final recents = List<dynamic>.from(provider.audiobooks)
+        final recents = List<Audiobook>.from(provider.audiobooks)
           ..sort((a, b) {
             // Priorité aux livres avec position sauvegardée
-            if (a.lastPosition > 0 && b.lastPosition == 0) return -1;
-            if (a.lastPosition == 0 && b.lastPosition > 0) return 1;
+            if ((a.lastPosition) > 0 && (b.lastPosition) == 0) return -1;
+            if ((a.lastPosition) == 0 && (b.lastPosition) > 0) return 1;
             // Sinon tri par date d'import (plus récent en premier)
-            return b.dateImported.compareTo(a.dateImported);
+            return (b.dateImported).compareTo(a.dateImported);
           });
 
         // Filtrer pour ne montrer que ceux avec position ou avec lecture récente
-        var recentlyRead =
-            recents.where((book) => book.lastPosition > 0).toList();
+        var recentlyRead = recents.where((book) => book.lastPosition > 0).toList();
 
         // Appliquer la recherche
         recentlyRead = recentlyRead.where((book) {
@@ -335,7 +336,7 @@ class _LibraryScreenState extends State<LibraryScreen>
             trailing: IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.orange),
               onPressed: () {
-                _showDeleteAmbianceDialog(context, music, provider);
+                _showDeleteAmbianceDialog(context, music);
               },
             ),
             onTap: () {
@@ -348,10 +349,34 @@ class _LibraryScreenState extends State<LibraryScreen>
     );
   }
 
+  Future<void> _deleteAmbientMusic(
+      BuildContext context, AmbientMusic music) async {
+    try {
+      final provider = context.read<AudiobookProvider>();
+      await provider.deleteAmbientMusic(music.id!);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ambiance supprimée'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   void _showDeleteAmbianceDialog(
     BuildContext context,
-    dynamic music,
-    AudiobookProvider provider,
+    AmbientMusic music,
   ) {
     showDialog(
       context: context,
@@ -371,29 +396,7 @@ class _LibraryScreenState extends State<LibraryScreen>
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              try {
-                await provider.deleteAmbientMusic(music.id!);
-                await provider.loadAmbientMusic();
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ambiance supprimée'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Erreur: $e'),
-                      backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              }
+              await _deleteAmbientMusic(context, music);
             },
             child: const Text('Supprimer',
                 style: TextStyle(color: Colors.redAccent)),
@@ -578,7 +581,7 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Widget _buildAudiobookList(BuildContext context, AudiobookProvider provider,
-      {List? customList}) {
+      {List<Audiobook>? customList}) {
     final books = customList ?? provider.audiobooks;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -590,9 +593,9 @@ class _LibraryScreenState extends State<LibraryScreen>
     );
   }
 
-  Widget _buildAudiobookCard(BuildContext context, audiobook) {
-    final progress = audiobook.duration > 0
-        ? audiobook.lastPosition / audiobook.duration
+  Widget _buildAudiobookCard(BuildContext context, Audiobook audiobook) {
+    final progress = (audiobook.duration ?? 0) > 0
+        ? audiobook.lastPosition / (audiobook.duration ?? 1)
         : 0.0;
 
     return Container(
@@ -805,7 +808,7 @@ class _LibraryScreenState extends State<LibraryScreen>
     );
   }
 
-  void _showDeleteDialog(BuildContext context, audiobook) {
+  void _showDeleteDialog(BuildContext context, Audiobook audiobook) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -844,7 +847,8 @@ class _LibraryScreenState extends State<LibraryScreen>
     );
   }
 
-  Future<void> _deleteAudiobook(BuildContext context, audiobook) async {
+  Future<void> _deleteAudiobook(
+      BuildContext context, Audiobook audiobook) async {
     try {
       final provider = context.read<AudiobookProvider>();
 
@@ -989,7 +993,7 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Future<void> _importFiles(BuildContext context) async {
-    print('=== DEBUT IMPORT FICHIERS ===');
+    debugPrint('=== DEBUT IMPORT FICHIERS ===');
     final importService = FileImportService();
     final provider = context.read<AudiobookProvider>();
 
@@ -1002,81 +1006,76 @@ class _LibraryScreenState extends State<LibraryScreen>
       int ambientCount = 0;
 
       for (var file in files) {
-        try {
-          print('Traitement fichier: ${file.path}');
+        try { //
+          debugPrint('Traitement fichier: ${file.path}');
 
           // Tous les fichiers sont traités comme des livres audio
           final audiobook = await importService.createAudiobookFromFile(file);
-          print('Livre créé: ${audiobook.title}');
+          debugPrint('Livre créé: ${audiobook.title}');
           await provider.addAudiobook(audiobook);
-          print('Livre ajouté en BDD');
+          debugPrint('Livre ajouté en BDD');
           audiobooksCount++;
         } catch (e, stackTrace) {
-          print('Erreur import: $e');
-          print('StackTrace: $stackTrace');
+          debugPrint('Erreur import: $e');
+          debugPrint('StackTrace: $stackTrace');
         }
       }
 
       if (context.mounted) {
-        String message = '';
         if (audiobooksCount > 0) {
-          message = '$audiobooksCount livre(s) importé(s)';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$audiobooksCount livre(s) importé(s)'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Aucun nouveau livre importé.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
         }
-        if (ambientCount > 0) {
-          message += (message.isNotEmpty ? ', ' : '') +
-              '$ambientCount musique(s) importée(s)';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message.isNotEmpty ? message : 'Import terminé'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
       }
     } else {
-      print('Aucun fichier sélectionné');
+      debugPrint('Aucun fichier sélectionné');
     }
-    print('=== FIN IMPORT FICHIERS ===');
-  }
-
-  // ignore: unused_element
-  Future<void> _importAudiobooks(BuildContext context) async {
-    // Cette fonction n'est plus utilisée mais on la garde pour compatibilité
-    await _importFiles(context);
+    debugPrint('=== FIN IMPORT FICHIERS ===');
   }
 
   Future<void> _importAmbientMusic(BuildContext context) async {
-    print('=== DEBUT IMPORT MUSIQUE AMBIANCE ===');
+    debugPrint('=== DEBUT IMPORT MUSIQUE AMBIANCE ===');
 
     try {
       final importService = FileImportService();
-      print('Service import créé');
+      debugPrint('Service import créé');
 
       final provider = context.read<AudiobookProvider>();
-      print('Provider récupéré');
+      debugPrint('Provider récupéré');
 
       final files = await importService.pickAmbientMusicFiles();
-      print('Fichiers musique sélectionnés: ${files?.length ?? 0}');
+      debugPrint('Fichiers musique sélectionnés: ${files?.length ?? 0}');
 
       if (files != null && files.isNotEmpty) {
-        print('Traitement de ${files.length} fichier(s)...');
+        debugPrint('Traitement de ${files.length} fichier(s)...');
 
         for (int i = 0; i < files.length; i++) {
           final file = files[i];
-          try {
-            print('[$i] Traitement fichier: ${file.path}');
-            print('[$i] Fichier existe: ${await file.exists()}');
+          try { //
+            debugPrint('[$i] Traitement fichier: ${file.path}');
+            debugPrint('[$i] Fichier existe: ${await file.exists()}');
 
             final music = await importService.createAmbientMusicFromFile(file);
-            print('[$i] Musique créée: ${music.name}');
+            debugPrint('[$i] Musique créée: ${music.name}');
 
             await provider.addAmbientMusic(music);
-            print('[$i] Musique ajoutée en BDD avec succès');
+            debugPrint('[$i] Musique ajoutée en BDD avec succès');
           } catch (e, stackTrace) {
-            print('[$i] ERREUR lors du traitement: $e');
-            print('[$i] StackTrace: $stackTrace');
+            debugPrint('[$i] ERREUR lors du traitement: $e');
+            debugPrint('[$i] StackTrace: $stackTrace');
           }
         }
 
@@ -1090,13 +1089,13 @@ class _LibraryScreenState extends State<LibraryScreen>
           );
         }
 
-        print('Message de succès affiché');
+        debugPrint('Message de succès affiché');
       } else {
-        print('Aucun fichier musique sélectionné');
+        debugPrint('Aucun fichier musique sélectionné');
       }
     } catch (e, stackTrace) {
-      print('ERREUR GLOBALE import musique: $e');
-      print('StackTrace global: $stackTrace');
+      debugPrint('ERREUR GLOBALE import musique: $e');
+      debugPrint('StackTrace global: $stackTrace');
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1109,7 +1108,7 @@ class _LibraryScreenState extends State<LibraryScreen>
       }
     }
 
-    print('=== FIN IMPORT MUSIQUE AMBIANCE ===');
+    debugPrint('=== FIN IMPORT MUSIQUE AMBIANCE ===');
   }
 
   void _showAmbientPicker(BuildContext context) async {
@@ -1118,6 +1117,8 @@ class _LibraryScreenState extends State<LibraryScreen>
     if (provider.ambientMusic.isEmpty) {
       await provider.loadAmbientMusic();
     }
+
+    if (!context.mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -1188,29 +1189,9 @@ class _LibraryScreenState extends State<LibraryScreen>
                           );
 
                           if (confirm == true) {
-                            try {
-                              await provider.deleteAmbientMusic(music.id!);
-                              await provider.loadAmbientMusic();
+                            await _deleteAmbientMusic(context, music);
+                            if (mounted) {
                               setState(() {});
-
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Ambiance supprimée'),
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Erreur: $e'),
-                                    backgroundColor: Colors.red,
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              }
                             }
                           }
                         },

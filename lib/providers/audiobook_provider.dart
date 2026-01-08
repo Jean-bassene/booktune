@@ -3,6 +3,7 @@ import '../models/audiobook.dart';
 import '../models/ambient_music.dart';
 import '../services/database_service.dart';
 import '../services/ambient_presets_service.dart';
+import '../services/logging_service.dart';
 
 class AudiobookProvider with ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;
@@ -27,6 +28,7 @@ class AudiobookProvider with ChangeNotifier {
       _audiobooks = await _db.getAllAudiobooks();
     } catch (e) {
       _error = 'Erreur de chargement: $e';
+      LoggingService.e('Erreur loadAudiobooks', e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -36,15 +38,11 @@ class AudiobookProvider with ChangeNotifier {
   /// Charge toutes les musiques d'ambiance + presets
   Future<void> loadAmbientMusic() async {
     try {
-      // Charger depuis la base de données
       _ambientMusic = await _db.getAllAmbientMusic();
-      
-      // Ajouter les presets s'ils ne sont pas déjà en base
       await _initializePresets();
-      
       notifyListeners();
     } catch (e) {
-      print('Erreur chargement musiques: $e');
+      LoggingService.e('Erreur chargement musiques', e);
     }
   }
 
@@ -52,29 +50,31 @@ class AudiobookProvider with ChangeNotifier {
   Future<void> _initializePresets() async {
     try {
       final presets = AmbientPresetsService.getPresetAmbients();
-      
+
       for (final preset in presets) {
-        // Vérifier si ce preset existe déjà
-        final exists = _ambientMusic.any((music) => music.filePath == preset.filePath);
-        
+        final exists =
+            _ambientMusic.any((music) => music.filePath == preset.filePath);
+
         if (!exists) {
-          // Ajouter le preset à la base de données
           await _db.insertAmbientMusic(preset);
           _ambientMusic.add(preset);
         }
       }
     } catch (e) {
-      print('Erreur initialisation presets: $e');
+      LoggingService.e('Erreur initialisation presets', e);
     }
   }
 
   /// Ajoute un livre audio
   Future<void> addAudiobook(Audiobook audiobook) async {
     try {
-      await _db.insertAudiobook(audiobook);
-      await loadAudiobooks();
+      final newId = await _db.insertAudiobook(audiobook);
+      final newAudiobook = audiobook.copyWith(id: newId);
+      _audiobooks.add(newAudiobook);
+      notifyListeners();
     } catch (e) {
       _error = 'Erreur d\'ajout: $e';
+      LoggingService.e('Erreur addAudiobook', e);
       notifyListeners();
     }
   }
@@ -82,10 +82,11 @@ class AudiobookProvider with ChangeNotifier {
   /// Ajoute une musique d'ambiance
   Future<void> addAmbientMusic(AmbientMusic music) async {
     try {
-      await _db.insertAmbientMusic(music);
-      await loadAmbientMusic();
+      final newId = await _db.insertAmbientMusic(music);
+      _ambientMusic.add(music.copyWith(id: newId));
+      notifyListeners();
     } catch (e) {
-      print('Erreur ajout musique: $e');
+      LoggingService.e('Erreur ajout musique', e);
     }
   }
 
@@ -100,7 +101,7 @@ class AudiobookProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Erreur mise à jour position: $e');
+      LoggingService.e('Erreur mise à jour position', e);
     }
   }
 
@@ -109,17 +110,16 @@ class AudiobookProvider with ChangeNotifier {
     try {
       final audiobook = _audiobooks.firstWhere((book) => book.id == id);
       final newFavoriteStatus = !audiobook.isFavorite;
-      
+
       await _db.updateAudiobookFavorite(id, newFavoriteStatus);
-      
-      // Mettre à jour localement
+
       final index = _audiobooks.indexWhere((book) => book.id == id);
       if (index != -1) {
         _audiobooks[index] = audiobook.copyWith(isFavorite: newFavoriteStatus);
         notifyListeners();
       }
     } catch (e) {
-      print('Erreur basculement favoris: $e');
+      LoggingService.e('Erreur basculement favoris', e);
     }
   }
 
@@ -127,9 +127,11 @@ class AudiobookProvider with ChangeNotifier {
   Future<void> deleteAudiobook(int id) async {
     try {
       await _db.deleteAudiobook(id);
-      await loadAudiobooks();
+      _audiobooks.removeWhere((book) => book.id == id);
+      notifyListeners();
     } catch (e) {
       _error = 'Erreur de suppression: $e';
+      LoggingService.e('Erreur deleteAudiobook', e);
       notifyListeners();
     }
   }
@@ -138,9 +140,10 @@ class AudiobookProvider with ChangeNotifier {
   Future<void> deleteAmbientMusic(int id) async {
     try {
       await _db.deleteAmbientMusic(id);
-      await loadAmbientMusic();
+      _ambientMusic.removeWhere((music) => music.id == id);
+      notifyListeners();
     } catch (e) {
-      print('Erreur suppression musique: $e');
+      LoggingService.e('Erreur suppression musique', e);
     }
   }
 }

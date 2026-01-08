@@ -34,18 +34,19 @@ dependencies:
   # Utilitaires
   uuid: ^4.2.2
 
-  # TTS
-  flutter_tts: ^4.2.3
+  # API
+  http: ^1.2.1
 
-  # EPUB/PDF parsing
-  epubx: ^4.0.0
-  syncfusion_flutter_pdf: ^26.2.14
+  # Logging
+  logger: ^2.0.2+1
 
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ^2.4.9
   flutter_launcher_icons: ^0.11.0
   flutter_lints: ^6.0.0
 

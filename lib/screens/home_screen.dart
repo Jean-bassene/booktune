@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/audiobook_provider.dart';
 import 'library_screen.dart';
 import 'player_screen.dart';
-import 'import_tts_screen.dart';
+import 'online_library_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const LibraryScreen(),
     const PlayerScreen(),
-    const ImportTtsScreen(),
+    const OnlineLibraryScreen(),
   ];
 
   @override
@@ -83,8 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Lecteur',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.import_contacts),
-              label: 'Importer',
+              icon: Icon(Icons.public),
+              label: 'Explorer',
             ),
           ],
         ),

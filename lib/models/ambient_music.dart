@@ -40,4 +40,24 @@ class AmbientMusic {
       dateImported: DateTime.fromMillisecondsSinceEpoch(map['dateImported']),
     );
   }
+
+  AmbientMusic copyWith({
+    int? id,
+    String? name,
+    String? filePath,
+    int? duration,
+    bool? isLoop,
+    String? category,
+    DateTime? dateImported,
+  }) {
+    return AmbientMusic(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      filePath: filePath ?? this.filePath,
+      duration: duration ?? this.duration,
+      isLoop: isLoop ?? this.isLoop,
+      category: category ?? this.category,
+      dateImported: dateImported ?? this.dateImported,
+    );
+  }
 }

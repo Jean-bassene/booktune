@@ -29,7 +29,7 @@ class FullscreenPlayerScreen extends StatelessWidget {
               if (details.primaryVelocity != null &&
                   details.primaryVelocity! < -500) {
                 final newPosition = player.position.inSeconds + 30;
-                final maxDuration = player.currentAudiobook!.duration;
+                final maxDuration = player.currentAudiobook!.duration ?? 0;
                 if (newPosition <= maxDuration) {
                   player.seek(Duration(seconds: newPosition));
                 }
@@ -81,7 +81,7 @@ class FullscreenPlayerScreen extends StatelessWidget {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: _buildCoverArt(),
+                          child: _buildCoverArt(player),
                         ),
                       ),
 
@@ -135,7 +135,7 @@ class FullscreenPlayerScreen extends StatelessWidget {
                               ),
                               child: Slider(
                                 min: 0,
-                                max: player.currentAudiobook!.duration
+                                max: (player.currentAudiobook!.duration ?? 0)
                                     .toDouble(),
                                 value: player.position.inSeconds.toDouble(),
                                 activeColor: Colors.purple.shade500,
@@ -164,7 +164,8 @@ class FullscreenPlayerScreen extends StatelessWidget {
                                   _formatDuration(
                                     Duration(
                                       seconds:
-                                          player.currentAudiobook!.duration,
+                                          player.currentAudiobook!.duration ??
+                                              0,
                                     ),
                                   ),
                                   style: TextStyle(
@@ -209,6 +210,17 @@ class FullscreenPlayerScreen extends StatelessWidget {
                                 iconSize: 32,
                               ),
                             ),
+                            const SizedBox(width: 12),
+
+                            // Bouton chapitre précédent
+                            IconButton(
+                              onPressed: player.currentLibrivoxBook != null && player.currentLibrivoxChapterIndex > 0
+                                  ? player.playPreviousChapter
+                                  : null,
+                              icon: const Icon(Icons.skip_previous),
+                              color: Colors.white,
+                              iconSize: 32,
+                            ),
                             const SizedBox(width: 24),
 
                             // Play/Pause
@@ -246,6 +258,18 @@ class FullscreenPlayerScreen extends StatelessWidget {
 
                             const SizedBox(width: 24),
 
+                            // Bouton chapitre suivant
+                            IconButton(
+                              onPressed: player.currentLibrivoxBook != null &&
+                                  player.currentLibrivoxChapterIndex + 1 < (player.currentLibrivoxBook?.chapters.length ?? 0)
+                                  ? player.playNextChapter
+                                  : null,
+                              icon: const Icon(Icons.skip_next),
+                              color: Colors.white,
+                              iconSize: 32,
+                            ),
+                            const SizedBox(width: 12),
+
                             // Avancer 30s
                             Container(
                               decoration: BoxDecoration(
@@ -257,7 +281,7 @@ class FullscreenPlayerScreen extends StatelessWidget {
                                   final newPosition =
                                       player.position.inSeconds + 30;
                                   final maxDuration =
-                                      player.currentAudiobook!.duration;
+                                      player.currentAudiobook!.duration ?? 0;
                                   if (newPosition <= maxDuration) {
                                     player.seek(
                                       Duration(seconds: newPosition),
@@ -309,8 +333,10 @@ class FullscreenPlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCoverArt() {
+  Widget _buildCoverArt(PlayerProvider player) {
     return Container(
+      width: double.infinity,
+      height: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         boxShadow: [

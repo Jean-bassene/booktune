@@ -1,9 +1,10 @@
+import 'package:audiobook_mixer/services/librivox_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'providers/audiobook_provider.dart';
 import 'providers/player_provider.dart';
-import 'providers/tts_provider.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
@@ -33,9 +34,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<http.Client>(create: (_) => http.Client()),
+        ProxyProvider<http.Client, LibrivoxService>(
+          update: (context, client, __) =>
+              LibrivoxService(httpClient: client),
+        ),
         ChangeNotifierProvider(create: (_) => AudiobookProvider()),
         ChangeNotifierProvider(create: (_) => PlayerProvider()),
-        ChangeNotifierProvider(create: (_) => TtsProvider()),
       ],
       child: Builder(
         builder: (context) {

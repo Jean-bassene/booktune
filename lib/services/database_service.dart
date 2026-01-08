@@ -2,7 +2,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/audiobook.dart';
 import '../models/ambient_music.dart';
-import '../models/text_audiobook.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
@@ -64,21 +63,6 @@ class DatabaseService {
         isLoop $intType,
         category $textType,
         dateImported $intType
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE text_audiobooks (
-        id $idType,
-        title $textType,
-        author $textType,
-        sourceType $textType,
-        content TEXT NOT NULL,
-        totalCharacters $intType,
-        lastPosition $intType,
-        dateImported $intType,
-        youtubeUrl TEXT,
-        duration REAL
       )
     ''');
 
@@ -181,51 +165,6 @@ class DatabaseService {
     );
   }
 
-  // ========== Text Audiobooks (TTS) ==========
-
-  Future<int> insertTextAudiobook(TextAudiobook audiobook) async {
-    final db = await database;
-    return await db.insert('text_audiobooks', audiobook.toMap());
-  }
-
-  Future<List<TextAudiobook>> getAllTextAudiobooks() async {
-    final db = await database;
-    final maps = await db.query(
-      'text_audiobooks',
-      orderBy: 'dateImported DESC',
-    );
-    return maps.map((map) => TextAudiobook.fromMap(map)).toList();
-  }
-
-  Future<TextAudiobook?> getTextAudiobook(int id) async {
-    final db = await database;
-    final maps = await db.query(
-      'text_audiobooks',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    return maps.isNotEmpty ? TextAudiobook.fromMap(maps.first) : null;
-  }
-
-  Future<int> updateTextAudiobookPosition(int id, int position) async {
-    final db = await database;
-    return await db.update(
-      'text_audiobooks',
-      {'lastPosition': position},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  Future<int> deleteTextAudiobook(int id) async {
-    final db = await database;
-    return await db.delete(
-      'text_audiobooks',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
   // ========== User Preferences (Freemium) ==========
 
   Future<void> setUserPreference(String key, String value) async {
@@ -245,15 +184,6 @@ class DatabaseService {
       whereArgs: [key],
     );
     return maps.isNotEmpty ? maps.first['value'] as String : null;
-  }
-
-  Future<int> getYouTubeImportCount() async {
-    final db = await database;
-    final maps = await db.query(
-      'text_audiobooks',
-      where: "sourceType = 'youtube'",
-    );
-    return maps.length;
   }
 
   Future close() async {
