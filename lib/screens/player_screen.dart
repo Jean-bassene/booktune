@@ -132,7 +132,7 @@ class PlayerScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.shade900.withOpacity(0.5),
+            color: Colors.blue.shade900.withOpacity(0.5),
             blurRadius: 30,
             offset: const Offset(0, 10),
           ),
@@ -174,7 +174,7 @@ class PlayerScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.3),
+              color: Colors.blue.withOpacity(0.3),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -283,12 +283,12 @@ class PlayerScreen extends StatelessWidget {
           height: 72,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.purple.shade500, Colors.pink.shade500],
+              colors: [Colors.blue.shade500, Colors.cyan.shade500],
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.purple.shade500.withOpacity(0.5),
+                color: Colors.blue.shade500.withOpacity(0.5),
                 blurRadius: 20,
                 offset: const Offset(0, 5),
               ),

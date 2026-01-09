@@ -47,8 +47,8 @@ class _LibraryScreenState extends State<LibraryScreen>
           end: Alignment.bottomRight,
           colors: [
             Colors.deepPurple.shade900,
-            Colors.purple.shade900,
-            Colors.deepPurple.shade900,
+            Colors.blue.shade900,
+            Colors.indigo.shade900,
           ],
         ),
       ),
@@ -78,8 +78,8 @@ class _LibraryScreenState extends State<LibraryScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.purple.shade900.withOpacity(0.5),
-            Colors.purple.shade800.withOpacity(0.5),
+            Colors.blue.shade900.withOpacity(0.5),
+            Colors.blue.shade800.withOpacity(0.5),
           ],
         ),
       ),
@@ -89,7 +89,7 @@ class _LibraryScreenState extends State<LibraryScreen>
         unselectedLabelColor: Colors.white70,
         indicator: UnderlineTabIndicator(
           borderSide: BorderSide(
-            color: Colors.purple.shade400,
+            color: Colors.blue.shade400,
             width: 3,
           ),
         ),
@@ -192,7 +192,8 @@ class _LibraryScreenState extends State<LibraryScreen>
           });
 
         // Filtrer pour ne montrer que ceux avec position ou avec lecture récente
-        var recentlyRead = recents.where((book) => book.lastPosition > 0).toList();
+        var recentlyRead =
+            recents.where((book) => book.lastPosition > 0).toList();
 
         // Appliquer la recherche
         recentlyRead = recentlyRead.where((book) {
@@ -1006,7 +1007,8 @@ class _LibraryScreenState extends State<LibraryScreen>
       int ambientCount = 0;
 
       for (var file in files) {
-        try { //
+        try {
+          //
           debugPrint('Traitement fichier: ${file.path}');
 
           // Tous les fichiers sont traités comme des livres audio
@@ -1064,7 +1066,8 @@ class _LibraryScreenState extends State<LibraryScreen>
 
         for (int i = 0; i < files.length; i++) {
           final file = files[i];
-          try { //
+          try {
+            //
             debugPrint('[$i] Traitement fichier: ${file.path}');
             debugPrint('[$i] Fichier existe: ${await file.exists()}');
 
