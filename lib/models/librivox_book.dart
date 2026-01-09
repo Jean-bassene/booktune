@@ -1,3 +1,5 @@
+import '../services/logging_service.dart';
+
 class LibrivoxBook {
   final String id;
   final String title;

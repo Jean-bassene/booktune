@@ -52,7 +52,9 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
     try {
       final librivoxService =
           Provider.of<LibrivoxService>(context, listen: false);
-      final fullBookDetails = await librivoxService.getBookDetails(book.id);
+      // Passer le livre existant pour conserver l'auteur
+      final fullBookDetails =
+          await librivoxService.getBookDetails(book.id, existingBook: book);
 
       if (fullBookDetails == null) {
         if (mounted) {
@@ -235,7 +237,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
             controller: _searchController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'Search for books, authors...',
+              hintText: 'recherche auteur...',
               hintStyle: TextStyle(color: Colors.white54),
               prefixIcon: const Icon(Icons.search, color: Colors.white54),
               suffixIcon: IconButton(

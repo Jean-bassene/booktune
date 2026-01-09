@@ -8,6 +8,9 @@ class AudioPlayerService {
   // Lecteur pour la musique d'ambiance
   final AudioPlayer _ambientPlayer = AudioPlayer();
 
+  // Flag pour éviter les appels concurrents
+  bool _isLoading = false;
+
   // Streams pour l'état de lecture
   Stream<Duration> get positionStream => _audiobookPlayer.positionStream;
   Stream<Duration?> get durationStream => _audiobookPlayer.durationStream;
@@ -26,7 +29,17 @@ class AudioPlayerService {
 
   /// Charge un livre audio (local ou réseau)
   Future<void> loadAudiobook(String path, {bool isNetwork = false}) async {
+    // Éviter les appels concurrents
+    if (_isLoading) {
+      print('Chargement déjà en cours, ignoré');
+      return;
+    }
+
+    _isLoading = true;
     try {
+      // Arrêter la lecture actuelle avant de charger
+      await _audiobookPlayer.stop();
+
       if (isNetwork) {
         await _audiobookPlayer.setUrl(path);
       } else {
@@ -36,6 +49,8 @@ class AudioPlayerService {
     } catch (e) {
       print('Erreur chargement livre audio: $e');
       rethrow;
+    } finally {
+      _isLoading = false;
     }
   }
 

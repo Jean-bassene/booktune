@@ -150,6 +150,16 @@ class PlayerProvider with ChangeNotifier {
     await _loadAndPlayLibrivoxChapterAtIndex();
   }
 
+  /// Retourne le titre du livre LibriVox en cours
+  String? get currentBookTitle {
+    return _currentLibrivoxBook?.title;
+  }
+
+  /// Retourne l'auteur du livre LibriVox en cours
+  String? get currentBookAuthor {
+    return _currentLibrivoxBook?.author;
+  }
+
   /// Helper to load and play the chapter at _currentLibrivoxChapterIndex
   Future<void> _loadAndPlayLibrivoxChapterAtIndex() async {
     if (_currentLibrivoxBook == null ||
@@ -164,9 +174,8 @@ class PlayerProvider with ChangeNotifier {
     // Create a temporary Audiobook object for playback
     final tempAudiobook = Audiobook(
       // No ID as it's not in the local DB
-      title:
-          _currentLibrivoxBook!.title, // Use the book title, not chapter title
-      author: _currentLibrivoxBook!.author, // Use the full book author
+      title: '${_currentLibrivoxBook!.title} - ${chapter.title}',
+      author: _currentLibrivoxBook!.author,
       filePath: chapter.url,
       isNetwork: true,
       duration: chapter.duration.inSeconds,
@@ -186,7 +195,6 @@ class PlayerProvider with ChangeNotifier {
       await _loadAndPlayLibrivoxChapterAtIndex();
     } else {
       debugPrint('Reached the end of the book.');
-      // Optionnel: arrêter la lecture ou boucler
     }
   }
 
@@ -200,8 +208,7 @@ class PlayerProvider with ChangeNotifier {
       await _loadAndPlayLibrivoxChapterAtIndex();
     } else {
       debugPrint('Reached the beginning of the book.');
-      // Optionnel: revenir au début du chapitre actuel ou du livre
-      await seek(Duration.zero); // Revenir au début du chapitre actuel
+      await seek(Duration.zero);
     }
   }
 
@@ -240,7 +247,6 @@ class PlayerProvider with ChangeNotifier {
 
     if (_isPlaying) {
       await _audioService.pause();
-      // Sauvegarder la position à la pause
       await _saveCurrentPosition();
     } else {
       await _audioService.play();
@@ -302,7 +308,7 @@ class PlayerProvider with ChangeNotifier {
 
     if (minutes > 0) {
       _sleepTimer = Timer(Duration(minutes: minutes), () async {
-        await togglePlayPause(); // Stop playback
+        await togglePlayPause();
         _sleepTimerMinutes = 0;
         notifyListeners();
       });
@@ -320,7 +326,7 @@ class PlayerProvider with ChangeNotifier {
   @override
   void dispose() {
     _sleepTimer?.cancel();
-    _saveCurrentPosition(); // Sauvegarde finale avant de quitter
+    _saveCurrentPosition();
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
     _stateSubscription?.cancel();

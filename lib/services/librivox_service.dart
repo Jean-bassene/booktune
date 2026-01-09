@@ -7,16 +7,39 @@ import 'logging_service.dart';
 
 class LibrivoxService {
   final http.Client _httpClient;
-  final String _librivoxApiBaseUrl = 'https://librivox.org/api/feed/audiobooks';
+  final String _librivoxApiBaseUrl =
+      'https://librivox.org/api/feed/audiobooks/';
+  final String _librivoxSearchUrl =
+      'https://librivox.org/api/feed/audiobooks/search/';
   final String _rssBaseUrl = 'https://librivox.org/rss';
+
+  // Cache en mémoire
+  final Map<String, CachedData<List<LibrivoxBook>>> _searchCache = {};
+  final Map<String, CachedData<LibrivoxBook>> _bookDetailsCache = {};
+  final Duration _cacheDuration = Duration(hours: 1);
+
+  // Debouncer pour recherches
+  Timer? _searchDebouncer;
+
+  // Timeout pour les requêtes
+  final Duration _requestTimeout = Duration(seconds: 15);
 
   LibrivoxService({required http.Client httpClient}) : _httpClient = httpClient;
 
-  /// Fetches recent books from the LibriVox API.
+  /// Fetches recent books avec cache
   Future<List<LibrivoxBook>> getRecentBooks() async {
+    const cacheKey = 'recent_books';
+
+    // Vérifier le cache
+    if (_searchCache.containsKey(cacheKey) &&
+        !_searchCache[cacheKey]!.isExpired) {
+      LoggingService.d('Utilisation du cache pour livres récents');
+      return _searchCache[cacheKey]!.data;
+    }
+
     try {
-      final url = Uri.parse('$_librivoxApiBaseUrl?format=json');
-      final response = await _httpClient.get(url);
+      final url = Uri.parse('$_librivoxApiBaseUrl?format=json&limit=50');
+      final response = await _httpClient.get(url).timeout(_requestTimeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -28,129 +51,244 @@ class LibrivoxService {
             }
           }
         }
+
+        // Mettre en cache
+        _searchCache[cacheKey] = CachedData(books, DateTime.now());
+
         LoggingService.i('Récupérés ${books.length} livres récents');
         return books;
       } else {
         LoggingService.e('Erreur API LibriVox: status ${response.statusCode}');
         throw Exception('Failed to load recent books from LibriVox API');
       }
+    } on TimeoutException {
+      LoggingService.e('Timeout lors de la récupération des livres récents');
+      return _searchCache[cacheKey]?.data ?? [];
     } catch (e) {
       LoggingService.e('Erreur getRecentBooks', e);
-      rethrow;
+      return _searchCache[cacheKey]?.data ?? [];
     }
   }
 
-  /// Searches for audiobooks on LibriVox using the LibriVox API.
-  /// Note: LibriVox a supprimé l'endpoint /search, on utilise une recherche locale
-  Future<List<LibrivoxBook>> searchBooks(String query) async {
+  /// Recherche avec debouncing et cache
+  Future<List<LibrivoxBook>> searchBooks(
+    String query, {
+    bool useDebounce = true,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    if (query.isEmpty) {
+      return getRecentBooks();
+    }
+
+    // Créer une clé de cache unique
+    final cacheKey = 'search_${query.toLowerCase()}_${limit}_$offset';
+
+    // Vérifier le cache
+    if (_searchCache.containsKey(cacheKey) &&
+        !_searchCache[cacheKey]!.isExpired) {
+      LoggingService.d('Utilisation du cache pour "$query"');
+      return _searchCache[cacheKey]!.data;
+    }
+
     try {
-      // Charger les livres récents et filtrer côté client
-      final url = Uri.parse('$_librivoxApiBaseUrl?format=json');
-      final response = await _httpClient.get(url);
+      final queryParams = {
+        'format': 'json',
+        'author': query, // Recherche par auteur
+        'limit': limit.toString(),
+        'offset': offset.toString(),
+      };
+
+      final url =
+          Uri.parse(_librivoxSearchUrl).replace(queryParameters: queryParams);
+      LoggingService.d('[searchBooks] URL auteur: $url');
+
+      final response = await _httpClient.get(url).timeout(_requestTimeout);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<LibrivoxBook> books = [];
-        final queryLower = query.toLowerCase();
 
         if (data != null && data['books'] is List) {
           for (final bookData in data['books']) {
             if (bookData['id'] != null) {
-              final book = LibrivoxBook.fromLibrivoxApiJson(bookData);
-              // Filtrer par titre ou auteur
-              if (book.title.toLowerCase().contains(queryLower) ||
-                  book.author.toLowerCase().contains(queryLower)) {
-                books.add(book);
-              }
+              books.add(LibrivoxBook.fromLibrivoxApiJson(bookData));
             }
           }
         }
-        LoggingService.i('Recherche "$query": ${books.length} résultats');
+
+        // Mettre en cache
+        _searchCache[cacheKey] = CachedData(books, DateTime.now());
+
+        LoggingService.i('Recherche API "$query": ${books.length} résultats');
         return books;
+      } else if (response.statusCode == 402 || response.statusCode == 429) {
+        // API limitée (402 = Payment Required, 429 = Rate limit)
+        // Utiliser recherche locale dans les livres récents
+        LoggingService.w(
+            'API LibriVox limitée (${response.statusCode}), recherche locale');
+        return _localSearchFallback(query);
+      } else if (response.statusCode == 404) {
+        // Aucun résultat trouvé
+        LoggingService.w('Aucun résultat pour "$query"');
+        return [];
       } else {
         LoggingService.e('Erreur API LibriVox: status ${response.statusCode}');
-        throw Exception('Failed to search books from LibriVox API');
+        return _searchCache[cacheKey]?.data ?? [];
       }
+    } on TimeoutException {
+      LoggingService.e('Timeout recherche "$query"');
+      return _searchCache[cacheKey]?.data ?? [];
     } catch (e) {
       LoggingService.e('Erreur searchBooks', e);
-      rethrow;
+      return _searchCache[cacheKey]?.data ?? [];
     }
   }
 
-  /// Fetches book details and chapters from the RSS feed (au lieu de archive.org)
-  Future<LibrivoxBook?> getBookDetails(String bookId) async {
-    LoggingService.d('[getBookDetails] Début pour bookId: $bookId');
+  /// Recherche avec debouncing (pour utilisation dans UI)
+  Future<List<LibrivoxBook>> searchBooksDebounced(
+    String query,
+    Duration debounceDuration,
+  ) async {
+    final completer = Completer<List<LibrivoxBook>>();
+
+    _searchDebouncer?.cancel();
+    _searchDebouncer = Timer(debounceDuration, () async {
+      final results = await searchBooks(query);
+      if (!completer.isCompleted) {
+        completer.complete(results);
+      }
+    });
+
+    return completer.future;
+  }
+
+  /// Search books by author avec cache
+  Future<List<LibrivoxBook>> searchByAuthor(String author) async {
+    if (author.isEmpty) {
+      return getRecentBooks();
+    }
+
+    final cacheKey = 'author_${author.toLowerCase()}';
+
+    if (_searchCache.containsKey(cacheKey) &&
+        !_searchCache[cacheKey]!.isExpired) {
+      return _searchCache[cacheKey]!.data;
+    }
 
     try {
-      // Utiliser le RSS pour obtenir les chapitres
+      final encodedAuthor = Uri.encodeComponent(author);
+      final url = Uri.parse(
+          '$_librivoxApiBaseUrl?author=$encodedAuthor&format=json&limit=50');
+      LoggingService.d('[searchByAuthor] URL: $url');
+
+      final response = await _httpClient.get(url).timeout(_requestTimeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<LibrivoxBook> books = [];
+
+        if (data != null && data['books'] is List) {
+          for (final bookData in data['books']) {
+            if (bookData['id'] != null) {
+              books.add(LibrivoxBook.fromLibrivoxApiJson(bookData));
+            }
+          }
+        }
+
+        _searchCache[cacheKey] = CachedData(books, DateTime.now());
+
+        LoggingService.i(
+            'Recherche auteur "$author": ${books.length} résultats');
+        return books;
+      } else {
+        LoggingService.e('Erreur API LibriVox: status ${response.statusCode}');
+        return _searchCache[cacheKey]?.data ?? [];
+      }
+    } on TimeoutException {
+      LoggingService.e('Timeout recherche auteur "$author"');
+      return _searchCache[cacheKey]?.data ?? [];
+    } catch (e) {
+      LoggingService.e('Erreur searchByAuthor', e);
+      return _searchCache[cacheKey]?.data ?? [];
+    }
+  }
+
+  /// Fetches book details avec cache
+  /// Si existingBook est fourni, on garde son auteur
+  Future<LibrivoxBook?> getBookDetails(String bookId,
+      {LibrivoxBook? existingBook}) async {
+    LoggingService.d('[getBookDetails] Début pour bookId: $bookId');
+
+    // Vérifier le cache
+    if (_bookDetailsCache.containsKey(bookId) &&
+        !_bookDetailsCache[bookId]!.isExpired) {
+      LoggingService.d('Utilisation du cache pour book $bookId');
+      return _bookDetailsCache[bookId]!.data;
+    }
+
+    try {
       final rssUrl = Uri.parse('$_rssBaseUrl/$bookId');
       LoggingService.d('[getBookDetails] RSS URL: $rssUrl');
 
-      final response = await _httpClient.get(rssUrl);
+      final response = await _httpClient.get(rssUrl).timeout(_requestTimeout);
 
       if (response.statusCode != 200) {
         LoggingService.e(
             '[getBookDetails] Erreur HTTP ${response.statusCode} pour $bookId');
-        return null;
+        return _bookDetailsCache[bookId]?.data;
       }
 
       final xmlContent = response.body;
 
-      // Parser le titre
       final titleMatch = RegExp(r'<title><!\[CDATA\[(.*?)\]\]></title>')
           .firstMatch(xmlContent);
       final title = titleMatch?.group(1) ?? 'Untitled';
 
-      // Parser l'auteur (itunes:author)
+      // Utiliser l'auteur existant si disponible, sinon parser le RSS
       final authorMatch =
           RegExp(r'<itunes:author><!\[CDATA\[(.*?)\]\]></itunes:author>')
               .firstMatch(xmlContent);
-      final author = authorMatch?.group(1) ?? 'Unknown Author';
+      final rssAuthor = authorMatch?.group(1);
+      final author =
+          (existingBook != null && existingBook.author != 'Unknown Author')
+              ? existingBook.author
+              : (rssAuthor ?? 'Unknown Author');
 
-      // Parser la description
       final descMatch =
           RegExp(r'<description><!\[CDATA\[(.*?)\]\]></description>')
               .firstMatch(xmlContent);
       final description = _stripHtmlTags(descMatch?.group(1) ?? '');
 
-      // Parser les chapitres depuis les items
       final chapters = <LibrivoxChapter>[];
-      int chapterNum = 0;
 
-      // Extraire les URLs MP3 et titres séparément (plus robuste)
       final urlPattern = RegExp(r'<enclosure url="(.*?\.mp3)"');
       final titlePattern =
           RegExp(r'<item>.*?<title><!\[CDATA\[(.*?)\]\]></title>');
       final durationPattern =
           RegExp(r'<itunes:duration><!\[CDATA\[(.*?)\]\]></itunes:duration>');
 
-      // Trouver tous les matches d'URLs
       final urls =
           urlPattern.allMatches(xmlContent).map((m) => m.group(1)!).toList();
-
-      // Trouver tous les titres
       final titles =
           titlePattern.allMatches(xmlContent).map((m) => m.group(1)!).toList();
-
-      // Trouver toutes les durées
       final durations = durationPattern
           .allMatches(xmlContent)
           .map((m) => m.group(1)!)
           .toList();
 
       LoggingService.d(
-          '[getBookDetails] URLs trouvées: ${urls.length}, Titres: ${titles.length}, Durées: ${durations.length}');
+          '[getBookDetails] URLs: ${urls.length}, Titres: ${titles.length}, Durées: ${durations.length}');
 
-      // Combiner les résultats
       final count = urls.length;
       for (int i = 0; i < count; i++) {
         final url = urls[i];
-        final title = i < titles.length ? titles[i] : 'Chapter ${i + 1}';
+        final chapterTitle = i < titles.length ? titles[i] : 'Chapter ${i + 1}';
         final duration = i < durations.length ? durations[i] : '';
 
         if (url.isNotEmpty) {
           chapters.add(LibrivoxChapter(
-            title: 'Chapter ${i + 1}: $title',
+            title: 'Chapter ${i + 1}: $chapterTitle',
             url: url,
             trackNumber: i + 1,
             duration: _parseDuration(duration),
@@ -166,13 +304,12 @@ class LibrivoxService {
       LoggingService.i(
           '[getBookDetails] Succès: "$title" avec ${chapters.length} chapitres');
 
-      // Calculer la durée totale
       final totalDuration = chapters.fold<Duration>(
         Duration.zero,
         (sum, c) => sum + c.duration,
       );
 
-      return LibrivoxBook(
+      final book = LibrivoxBook(
         id: bookId,
         title: title,
         author: author,
@@ -182,41 +319,61 @@ class LibrivoxService {
         totalDuration: totalDuration,
         chapters: chapters,
       );
+
+      // Mettre en cache
+      _bookDetailsCache[bookId] = CachedData(book, DateTime.now());
+
+      return book;
+    } on TimeoutException {
+      LoggingService.e('[getBookDetails] Timeout pour $bookId');
+      return _bookDetailsCache[bookId]?.data;
     } catch (e, stackTrace) {
       LoggingService.e(
-          '[getBookDetails) Exception pour $bookId', e, stackTrace);
-      return null;
+          '[getBookDetails] Exception pour $bookId', e, stackTrace);
+      return _bookDetailsCache[bookId]?.data;
     }
   }
 
-  /// Supprime les balises HTML d'une chaîne
+  /// Nettoie le cache expiré
+  void cleanExpiredCache() {
+    _searchCache.removeWhere((key, value) => value.isExpired);
+    _bookDetailsCache.removeWhere((key, value) => value.isExpired);
+    LoggingService.d('Cache nettoyé');
+  }
+
+  /// Vide tout le cache
+  void clearCache() {
+    _searchCache.clear();
+    _bookDetailsCache.clear();
+    LoggingService.d('Cache vidé');
+  }
+
   String _stripHtmlTags(String html) {
     return html.replaceAll(RegExp(r'<[^>]*>'), '').trim();
   }
 
-  /// Parse une chaîne de durée en Duration
   Duration _parseDuration(String? durationString) {
     if (durationString == null || durationString.isEmpty) {
       return Duration.zero;
     }
 
     try {
-      // Format HH:MM:SS ou MM:SS
       if (durationString.contains(':')) {
         final parts = durationString.split(':');
         if (parts.length == 3) {
           return Duration(
-              hours: int.parse(parts[0]),
-              minutes: int.parse(parts[1]),
-              seconds: double.parse(parts[2]).round());
+            hours: int.parse(parts[0]),
+            minutes: int.parse(parts[1]),
+            seconds: double.parse(parts[2]).round(),
+          );
         } else if (parts.length == 2) {
           return Duration(
-              minutes: int.parse(parts[0]),
-              seconds: double.parse(parts[1]).round());
+            minutes: int.parse(parts[0]),
+            seconds: double.parse(parts[1]).round(),
+          );
         }
       }
 
-      // Format secondes simples
       final seconds = double.tryParse(durationString);
       if (seconds != null) {
         return Duration(milliseconds: (seconds * 1000).round());
@@ -226,5 +383,87 @@ class LibrivoxService {
     }
 
     return Duration.zero;
+  }
+
+  void dispose() {
+    _searchDebouncer?.cancel();
+    _cacheCleanupTimer?.cancel();
+  }
+
+  /// Recherche locale dans les livres récents (fallback quand API limitée)
+  Future<List<LibrivoxBook>> _localSearchFallback(String query) async {
+    if (query.isEmpty) return getRecentBooks();
+
+    try {
+      // Récupérer les livres récents
+      final recentBooks = await getRecentBooks();
+      final queryLower = query.toLowerCase();
+
+      // Filtrer par titre ou auteur
+      return recentBooks.where((book) {
+        return book.title.toLowerCase().contains(queryLower) ||
+            book.author.toLowerCase().contains(queryLower);
+      }).toList();
+    } catch (e) {
+      LoggingService.e('Erreur _localSearchFallback', e);
+      return [];
+    }
+  }
+
+  // === Méthodes pour l'UI ===
+
+  /// Charge plus de résultats pour la pagination
+  Future<List<LibrivoxBook>> loadMoreResults({
+    required String query,
+    required int currentCount,
+    int pageSize = 50,
+  }) async {
+    if (query.isEmpty) return [];
+    return searchBooks(query, limit: pageSize, offset: currentCount);
+  }
+
+  /// Retourne les statistiques du cache
+  Map<String, Map<String, dynamic>> getCacheStats() {
+    return {
+      'searchCache': {
+        'total': _searchCache.length,
+        'active': _searchCache.values.where((v) => !v.isExpired).length,
+        'expired': _searchCache.values.where((v) => v.isExpired).length,
+      },
+      'detailsCache': {
+        'total': _bookDetailsCache.length,
+        'active': _bookDetailsCache.values.where((v) => !v.isExpired).length,
+        'expired': _bookDetailsCache.values.where((v) => v.isExpired).length,
+      },
+    };
+  }
+
+  // Nettoyage automatique du cache
+  Timer? _cacheCleanupTimer;
+
+  /// Démarre le nettoyage automatique du cache (toutes les 10 minutes)
+  void startAutomaticCacheCleanup() {
+    _cacheCleanupTimer?.cancel();
+    _cacheCleanupTimer = Timer.periodic(Duration(minutes: 10), (_) {
+      cleanExpiredCache();
+    });
+  }
+
+  /// Arrête le nettoyage automatique du cache
+  void stopAutomaticCacheCleanup() {
+    _cacheCleanupTimer?.cancel();
+    _cacheCleanupTimer = null;
+  }
+}
+
+/// Classe helper pour le cache
+class CachedData<T> {
+  final T data;
+  final DateTime timestamp;
+
+  CachedData(this.data, this.timestamp);
+
+  bool get isExpired {
+    return DateTime.now().difference(timestamp) > Duration(hours: 1);
   }
 }
