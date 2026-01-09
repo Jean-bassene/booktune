@@ -219,18 +219,25 @@ class PlayerProvider with ChangeNotifier {
 
   /// Charge et joue une musique d'ambiance
   Future<void> loadAndPlayAmbient(AmbientMusic music) async {
+    print('🎵 loadAndPlayAmbient appelée pour: ${music.name}');
     try {
+      print('🎵 Chargement de ${music.filePath}');
       await _audioService.loadAmbientMusic(music.filePath);
+      print('🎵 Réglage volume ambiance: $_ambientVolume');
       await _audioService.setAmbientVolume(_ambientVolume);
 
       _currentAmbientMusic = music;
+      print('🎵 Ambiance définie: ${music.name}');
       notifyListeners();
 
       if (_isPlaying) {
+        print('🎵 Lecture en cours, démarrage ambiance');
         await _audioService.play();
+      } else {
+        print('🎵 Lecture pas en cours, ambiance chargée mais pas démarrée');
       }
     } catch (e) {
-      debugPrint('Erreur chargement musique: $e');
+      print('❌ Erreur chargement musique: $e');
       // Ne pas définir _currentAmbientMusic si le chargement échoue
       _currentAmbientMusic = null;
       notifyListeners();

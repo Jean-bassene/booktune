@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:audiobook_mixer/providers/player_provider.dart';
-import 'package:audiobook_mixer/models/audiobook.dart';
+import 'package:booktune/providers/player_provider.dart';
+import 'package:booktune/models/audiobook.dart';
 
 void main() {
   group('PlayerProvider Tests', () {

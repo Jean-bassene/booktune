@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:audiobook_mixer/services/cache_service.dart';
+import 'package:booktune/services/cache_service.dart';
 
 void main() {
   group('CacheService Tests', () {

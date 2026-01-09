@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 
-import 'package:audiobook_mixer/models/librivox_book.dart';
-import 'package:audiobook_mixer/services/librivox_service.dart';
+import 'package:booktune/models/librivox_book.dart';
+import 'package:booktune/services/librivox_service.dart';
 
 class MockHttpClient extends Mock implements http.Client {}
 
@@ -19,7 +19,6 @@ void main() {
   });
 
   group('LibrivoxService', () {
-
     group('getRecentBooks', () {
       test('returns a list of LibrivoxBook on successful API call', () async {
         final mockResponse = {
@@ -33,8 +32,8 @@ void main() {
             ]
           }
         };
-        when(mockHttpClient.get(any)).thenAnswer((_) async =>
-            http.Response(json.encode(mockResponse), 200));
+        when(mockHttpClient.get(any)).thenAnswer(
+            (_) async => http.Response(json.encode(mockResponse), 200));
 
         final books = await librivoxService.getRecentBooks();
 
@@ -57,9 +56,9 @@ void main() {
             ]
           }
         };
-        when(mockHttpClient.get(any)).thenAnswer((_) async =>
-            http.Response(json.encode(mockResponse), 200));
-        
+        when(mockHttpClient.get(any)).thenAnswer(
+            (_) async => http.Response(json.encode(mockResponse), 200));
+
         final books = await librivoxService.searchBooks('test');
 
         expect(books, isA<List<LibrivoxBook>>());
@@ -94,33 +93,33 @@ void main() {
               "title": "Chapter 1",
               "length": "1436.67"
             },
-            "/not_an_mp3.jpg": {
-              "format": "JPEG"
-            }
+            "/not_an_mp3.jpg": {"format": "JPEG"}
           }
         };
 
-        when(mockHttpClient.get(any)).thenAnswer((_) async => 
-            http.Response(json.encode(mockResponse), 200));
-        
+        when(mockHttpClient.get(any)).thenAnswer(
+            (_) async => http.Response(json.encode(mockResponse), 200));
+
         final book = await librivoxService.getBookDetails('moby_dick_librivox');
 
         expect(book, isA<LibrivoxBook>());
         expect(book?.id, 'moby_dick_librivox');
         expect(book?.author, 'Herman Melville');
         expect(book?.chapters.length, 2);
-        expect(book?.totalDuration, const Duration(hours: 24, minutes: 31, seconds: 7));
-        
+        expect(book?.totalDuration,
+            const Duration(hours: 24, minutes: 31, seconds: 7));
+
         expect(book?.chapters[0].title, 'Etymology and Extracts');
         expect(book?.chapters[0].trackNumber, 0);
         expect(book?.chapters[0].duration, const Duration(seconds: 1753));
-        expect(book?.chapters[0].url, 'https://ia800506.us.archive.org/1/items/moby_dick_librivox//mobydick_00_melville_128kb.mp3');
+        expect(book?.chapters[0].url,
+            'https://ia800506.us.archive.org/1/items/moby_dick_librivox//mobydick_00_melville_128kb.mp3');
       });
 
       test('returns null when metadata API throws an exception', () async {
-        when(mockHttpClient.get(any)).thenAnswer((_) async => 
-            http.Response('Error', 500));
-        
+        when(mockHttpClient.get(any))
+            .thenAnswer((_) async => http.Response('Error', 500));
+
         final book = await librivoxService.getBookDetails('any_id');
 
         expect(book, isNull);

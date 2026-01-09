@@ -1,4 +1,4 @@
-import 'package:audiobook_mixer/services/librivox_service.dart';
+import 'package:booktune/services/librivox_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
