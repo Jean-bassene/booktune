@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
               useMaterial3: true,
               brightness: Brightness.dark,
               colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.purple,
+                seedColor: Colors.blue,
                 brightness: Brightness.dark,
               ),
               scaffoldBackgroundColor: Colors.black,

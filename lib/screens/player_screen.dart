@@ -18,8 +18,8 @@ class PlayerScreen extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Colors.deepPurple.shade900,
-            Colors.purple.shade900,
-            Colors.deepPurple.shade900,
+            Colors.blue.shade900,
+            Colors.indigo.shade900,
           ],
         ),
       ),
@@ -125,7 +125,7 @@ class PlayerScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.purple.shade600,
+            Colors.blue.shade600,
             Colors.indigo.shade800,
           ],
         ),
@@ -199,10 +199,10 @@ class PlayerScreen extends StatelessWidget {
             trackHeight: 4,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
-            activeTrackColor: Colors.purple.shade400,
+            activeTrackColor: Colors.blue.shade400,
             inactiveTrackColor: Colors.white24,
             thumbColor: Colors.white,
-            overlayColor: Colors.purple.shade400.withOpacity(0.2),
+            overlayColor: Colors.blue.shade400.withOpacity(0.2),
           ),
           child: Slider(
             value: player.progress.clamp(0.0, 1.0),
@@ -359,7 +359,7 @@ class PlayerScreen extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.speed, color: Colors.purple, size: 20),
+              Icon(Icons.speed, color: Colors.blue, size: 20),
               SizedBox(width: 8),
               Text(
                 'Vitesse de lecture',
@@ -551,7 +551,7 @@ class PlayerScreen extends StatelessWidget {
           children: [
             const Row(
               children: [
-                Icon(Icons.music_note, color: Colors.purple, size: 20),
+                Icon(Icons.music_note, color: Colors.blue, size: 20),
                 SizedBox(width: 8),
                 Text(
                   'Ambiance',
@@ -577,7 +577,7 @@ class PlayerScreen extends StatelessWidget {
                   icon: const Icon(Icons.library_music, size: 16),
                   label: const Text('Presets'),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.purple.shade300,
+                    foregroundColor: Colors.blue.shade300,
                   ),
                 ),
                 if (player.currentAmbientMusic != null)
