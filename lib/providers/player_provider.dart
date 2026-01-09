@@ -28,6 +28,10 @@ class PlayerProvider with ChangeNotifier {
   Timer? _sleepTimer;
   int _sleepTimerMinutes = 0;
 
+  // Background timeout timer (3 minutes)
+  Timer? _backgroundTimer;
+  static const int _backgroundTimeoutMinutes = 3;
+
   StreamSubscription? _positionSubscription;
   StreamSubscription? _durationSubscription;
   StreamSubscription? _stateSubscription;
@@ -336,9 +340,49 @@ class PlayerProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Appelé quand l'app passe en arrière-plan
+  void onAppPaused() {
+    debugPrint('📱 App passée en arrière-plan');
+    // Démarrer le timer de 3 minutes pour arrêter automatiquement la lecture
+    _startBackgroundTimer();
+  }
+
+  /// Appelé quand l'app revient au premier plan
+  void onAppResumed() {
+    debugPrint('📱 App revenue au premier plan');
+    // Annuler le timer d'arrêt automatique
+    _cancelBackgroundTimer();
+  }
+
+  /// Démarre le timer d'arrêt automatique en arrière-plan
+  void _startBackgroundTimer() {
+    _cancelBackgroundTimer(); // Annuler tout timer existant
+
+    if (_isPlaying) {
+      debugPrint(
+          '⏰ Démarrage timer arrière-plan: $_backgroundTimeoutMinutes minutes');
+      _backgroundTimer =
+          Timer(Duration(minutes: _backgroundTimeoutMinutes), () async {
+        debugPrint(
+            '⏰ Timer arrière-plan expiré - Arrêt automatique de la lecture');
+        await togglePlayPause();
+      });
+    }
+  }
+
+  /// Annule le timer d'arrêt automatique en arrière-plan
+  void _cancelBackgroundTimer() {
+    if (_backgroundTimer != null) {
+      debugPrint('⏰ Annulation timer arrière-plan');
+      _backgroundTimer!.cancel();
+      _backgroundTimer = null;
+    }
+  }
+
   @override
   void dispose() {
     _sleepTimer?.cancel();
+    _backgroundTimer?.cancel();
     _saveCurrentPosition();
     _positionSubscription?.cancel();
     _durationSubscription?.cancel();
