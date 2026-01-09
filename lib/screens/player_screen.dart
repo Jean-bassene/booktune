@@ -187,7 +187,6 @@ class PlayerScreen extends StatelessWidget {
             ),
           ),
         ],
-
       ],
     );
   }
@@ -612,7 +611,11 @@ class PlayerScreen extends StatelessWidget {
                   music.name,
                   music.id ?? 0, // Protection null
                   isSelected,
-                  () => player.loadAndPlayAmbient(music),
+                  () {
+                    print(
+                        '🔥 Clic sur ambiance: ${music.name} (${music.filePath})');
+                    player.loadAndPlayAmbient(music);
+                  },
                   audiobookProvider,
                 );
               }).toList(),
