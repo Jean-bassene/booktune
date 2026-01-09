@@ -36,8 +36,7 @@ class MyApp extends StatelessWidget {
       providers: [
         Provider<http.Client>(create: (_) => http.Client()),
         ProxyProvider<http.Client, LibrivoxService>(
-          update: (context, client, __) =>
-              LibrivoxService(httpClient: client),
+          update: (context, client, __) => LibrivoxService(httpClient: client),
         ),
         ChangeNotifierProvider(create: (_) => AudiobookProvider()),
         ChangeNotifierProvider(create: (_) => PlayerProvider()),
@@ -50,7 +49,7 @@ class MyApp extends StatelessWidget {
           playerProvider.setAudiobookProvider(audiobookProvider);
 
           return MaterialApp(
-            title: 'Audiobook Mixer',
+            title: 'Booktune',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               useMaterial3: true,

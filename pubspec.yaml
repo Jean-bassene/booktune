@@ -1,4 +1,4 @@
-name: audiobook_mixer
+name: booktune
 description: Lecteur de livres audio avec musique d'ambiance
 publish_to: 'none'
 version: 1.0.0+1
