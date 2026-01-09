@@ -220,17 +220,20 @@ class PlayerProvider with ChangeNotifier {
   /// Charge et joue une musique d'ambiance
   Future<void> loadAndPlayAmbient(AmbientMusic music) async {
     try {
-      _currentAmbientMusic = music;
-      notifyListeners();
-
       await _audioService.loadAmbientMusic(music.filePath);
       await _audioService.setAmbientVolume(_ambientVolume);
+
+      _currentAmbientMusic = music;
+      notifyListeners();
 
       if (_isPlaying) {
         await _audioService.play();
       }
     } catch (e) {
       debugPrint('Erreur chargement musique: $e');
+      // Ne pas définir _currentAmbientMusic si le chargement échoue
+      _currentAmbientMusic = null;
+      notifyListeners();
     }
   }
 
