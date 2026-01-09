@@ -27,48 +27,8 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    final playerProvider = context.read<PlayerProvider>();
-
-    switch (state) {
-      case AppLifecycleState.paused:
-        // App passe en arrière-plan
-        playerProvider.onAppPaused();
-        break;
-      case AppLifecycleState.resumed:
-        // App revient au premier plan
-        playerProvider.onAppResumed();
-        break;
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.detached:
-      case AppLifecycleState.hidden:
-        // Ne rien faire pour ces états
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
