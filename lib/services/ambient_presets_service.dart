@@ -3,39 +3,32 @@ import '../models/ambient_music.dart';
 class AmbientPresetsService {
   static const List<Map<String, dynamic>> _presets = [
     {
-      'name': 'Pluie douce',
-      'filePath': 'assets/ambient/rain.mp3',
-      'category': 'nature',
+      'name': 'Nebula',
+      'filePath': 'assets/ambient/Nebula.mp3',
+      'category': 'space',
       'duration': 180, // 3 minutes
-      'description': 'Pluie légère et apaisante',
+      'description': 'Ambiance spatiale relaxante',
     },
     {
-      'name': 'Forêt mystique',
-      'filePath': 'assets/ambient/forest.mp3',
-      'category': 'nature',
+      'name': 'Piano doux',
+      'filePath': 'assets/ambient/piano.mp3',
+      'category': 'music',
       'duration': 240, // 4 minutes
-      'description': 'Sons de la forêt avec oiseaux',
+      'description': 'Mélodies apaisantes au piano',
     },
     {
-      'name': 'Vagues océan',
-      'filePath': 'assets/ambient/ocean.mp3',
-      'category': 'nature',
+      'name': 'Rising',
+      'filePath': 'assets/ambient/Rising.mp3',
+      'category': 'inspirational',
       'duration': 300, // 5 minutes
-      'description': 'Vagues douces sur la plage',
+      'description': 'Musique motivante et uplifting',
     },
     {
-      'name': 'Feu de cheminée',
-      'filePath': 'assets/ambient/fireplace.mp3',
-      'category': 'cozy',
+      'name': 'Sunrise',
+      'filePath': 'assets/ambient/Sunrise.mp3',
+      'category': 'nature',
       'duration': 200, // 3.3 minutes
-      'description': 'Crépitement chaleureux du feu',
-    },
-    {
-      'name': 'Café ambiance',
-      'filePath': 'assets/ambient/cafe.mp3',
-      'category': 'urban',
-      'duration': 220, // 3.7 minutes
-      'description': 'Ambiance café avec murmures',
+      'description': 'Lever du soleil paisible',
     },
   ];
 
