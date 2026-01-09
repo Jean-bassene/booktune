@@ -1,45 +1,61 @@
-# Comment mettre à jour l'icône de l'app BookTune
+# Guide BookTune - Icônes et Musiques d'Ambiance
 
-## Les icônes actuelles
+## 🎵 Musiques d'Ambiance Gratuites et Libres de Droits
 
-Les icônes sont situées dans :
+Voici 4 excellentes sources de musique d'ambiance gratuite et légale :
+
+### 🌧️ **Pluie/Orage** - Sons Naturels
+- **Source** : Freesound.org
+- **Recherche** : "rain" ou "thunderstorm"
+- **Durée suggérée** : 2-3 minutes en boucle
+- **Exemple** : Sons de pluie naturelle sans musique
+
+### 🌿 **Forêt Paisible** - Ambiance Nature
+- **Source** : Bensound.com (gratuit)
+- **Morceau** : "Little Planet" ou "Creative Minds"
+- **Style** : Instrumental relaxant, parfait pour la lecture
+- **Licence** : Gratuit pour usage personnel
+
+### 🌅 **Aube/Éveil** - Musique Inspirante
+- **Source** : Incompetech.com (Kevin MacLeod)
+- **Morceau** : "Floating Cities" ou "Impact Moderato"
+- **Style** : Classique moderne, motivant
+- **Licence** : Creative Commons (gratuit)
+
+### 🎹 **Piano Apaisant** - Musique Douce
+- **Source** : Bensound.com (gratuit)
+- **Morceau** : "The Lounge" ou "Slow Motion"
+- **Style** : Piano solo, très relaxant
+- **Licence** : Gratuit pour usage personnel
+
+### 📥 Comment Télécharger et Intégrer
+
+1. **Visitez les sites** mentionnés ci-dessus
+2. **Téléchargez** les fichiers MP3 (format recommandé)
+3. **Renommez** les fichiers selon vos préférences :
+   - `rain.mp3`
+   - `forest.mp3`
+   - `sunrise.mp3`
+   - `piano.mp3`
+4. **Placez-les** dans `assets/ambient/`
+5. **Mettez à jour** `lib/services/ambient_presets_service.dart`
+
+## 🎨 Icônes de l'App
+
+### Icônes Générées Automatiquement
 - `android/app/src/main/res/mipmap-mdpi/ic_launcher.png` (48x48)
 - `android/app/src/main/res/mipmap-hdpi/ic_launcher.png` (72x72)
 - `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png` (96x96)
 - `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png` (144x144)
 - `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` (192x192)
 
-## Pour remplacer par ta nouvelle image (livre + BookTune)
+### Pour Changer l'Icône Principale
+1. Placez votre image dans `assets/images/app_icon.png` (1024x1024px recommandé)
+2. Exécutez : `python generate_icon.py`
+3. Toutes les icônes seront automatiquement générées
 
-### Option 1 : Manuelle (avec Paint ou autre)
-
-1. **Télécharge l'image** depuis :
-   https://minimax-algeng-chat-tts-us.oss-us-east-1.aliyuncs.com/ccv2%2F2026-01-09%2FMiniMax-M2.1%2F1982827895197799239%2F7c3aee8c18c2e567b7248d511280ab550f7a2a099625c7f317915cb88cc45856..png
-
-2. **Redimensionne** aux 5 tailles ci-dessus avec Paint, GIMP, ou un outil en ligne
-
-3. **Remplace** les fichiers dans les dossiers `mipmap-*/`
-
-### Option 2 : Automatique avec flutter_launcher_icons
-
-1. Crée le dossier : `assets/images/`
-
-2. Sauvegarde l'image sous : `assets/images/app_icon.png`
-   (Utilise une image d'au moins 1024x1024 px pour la meilleure qualité)
-
-3. Exécute :
-   ```bash
-   flutter pub run flutter_launcher_icons
-   ```
-
-4. Rebuild l'app :
-   ```bash
-   flutter build apk --release
-   ```
-
-## Sources de l'icône
-
+### Sources d'Icônes
 - **iOS** : `ios/Runner/Assets.xcassets/AppIcon.appiconset/`
 - **Web** : `web/icons/Icon-192.png` et `Icon-512.png`
 
-Ces fichiers sont aussi générés par `flutter_launcher_icons`.
+Ces fichiers sont générés automatiquement par le script Python.
