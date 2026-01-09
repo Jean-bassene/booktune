@@ -11,6 +11,9 @@ class AudioPlayerService {
   // Flag pour éviter les appels concurrents
   bool _isLoading = false;
 
+  // Flag pour savoir si la musique d'ambiance est chargée
+  bool _ambientLoaded = false;
+
   // Streams pour l'état de lecture
   Stream<Duration> get positionStream => _audiobookPlayer.positionStream;
   Stream<Duration?> get durationStream => _audiobookPlayer.durationStream;
@@ -66,9 +69,11 @@ class AudioPlayerService {
       }
       // Configuration pour boucler
       await _ambientPlayer.setLoopMode(LoopMode.one);
+      _ambientLoaded = true;
       print('Musique d\'ambiance chargée: $filePath');
     } catch (e) {
       print('Erreur chargement musique: $e');
+      _ambientLoaded = false;
       rethrow;
     }
   }
@@ -76,7 +81,7 @@ class AudioPlayerService {
   /// Démarre la lecture
   Future<void> play() async {
     await _audiobookPlayer.play();
-    if (_ambientPlayer.audioSource != null) {
+    if (_ambientLoaded) {
       await _ambientPlayer.play();
     }
   }
@@ -134,6 +139,7 @@ class AudioPlayerService {
   /// Arrête la musique d'ambiance
   Future<void> stopAmbient() async {
     await _ambientPlayer.stop();
+    _ambientLoaded = false;
   }
 
   /// Libère les ressources
