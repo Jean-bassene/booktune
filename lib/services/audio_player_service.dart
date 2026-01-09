@@ -58,24 +58,44 @@ class AudioPlayerService {
   }
 
   /// Charge une musique d'ambiance (asset ou fichier local)
+  /// Supporte les formats: MP3, WAV, OGG, M4A, AAC, FLAC
   Future<void> loadAmbientMusic(String filePath) async {
     try {
       if (filePath.startsWith('assets/')) {
         // Charger depuis les assets
         await _ambientPlayer.setAsset(filePath);
+        print('✅ Musique d\'ambiance chargée depuis assets: $filePath');
       } else {
         // Charger depuis le système de fichiers
         await _ambientPlayer.setFilePath(filePath);
+        print('✅ Musique d\'ambiance chargée depuis fichier: $filePath');
       }
       // Configuration pour boucler
       await _ambientPlayer.setLoopMode(LoopMode.one);
       _ambientLoaded = true;
-      print('Musique d\'ambiance chargée: $filePath');
     } catch (e) {
-      print('Erreur chargement musique: $e');
       _ambientLoaded = false;
-      rethrow;
+      String errorMessage = _getDetailedErrorMessage(e.toString(), filePath);
+      print('❌ Erreur chargement musique: $errorMessage');
+      throw Exception(errorMessage);
     }
+  }
+
+  /// Analyse l'erreur et donne un message détaillé
+  String _getDetailedErrorMessage(String error, String filePath) {
+    if (error.contains('Unable to load asset') ||
+        error.contains('does not exist')) {
+      return 'Fichier audio introuvable: $filePath. Vérifiez que le fichier existe.';
+    }
+    if (error.contains('UnrecognizedInputFormatException') ||
+        error.contains('Source error')) {
+      String extension = filePath.split('.').last.toLowerCase();
+      return 'Format audio non supporté ou fichier corrompu: $filePath. Formats supportés: MP3, WAV, OGG, M4A, AAC, FLAC. Extension détectée: .$extension';
+    }
+    if (error.contains('Permission denied')) {
+      return 'Permission d\'accès refusée pour: $filePath';
+    }
+    return 'Erreur inconnue lors du chargement de: $filePath - $error';
   }
 
   /// Démarre la lecture

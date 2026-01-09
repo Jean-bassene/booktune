@@ -611,10 +611,27 @@ class PlayerScreen extends StatelessWidget {
                   music.name,
                   music.id ?? 0, // Protection null
                   isSelected,
-                  () {
+                  () async {
                     print(
                         '🔥 Clic sur ambiance: ${music.name} (${music.filePath})');
-                    player.loadAndPlayAmbient(music);
+                    try {
+                      await player.loadAndPlayAmbient(music);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              e.toString().contains('Exception:')
+                                  ? e.toString().split('Exception: ')[1]
+                                  : e.toString(),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.red.shade700,
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                    }
                   },
                   audiobookProvider,
                 );

@@ -242,6 +242,8 @@ class PlayerProvider with ChangeNotifier {
       // Ne pas définir _currentAmbientMusic si le chargement échoue
       _currentAmbientMusic = null;
       notifyListeners();
+      // Remonter l'erreur pour affichage dans l'UI
+      rethrow;
     }
   }
 
