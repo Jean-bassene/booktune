@@ -233,11 +233,12 @@ class PlayerProvider with ChangeNotifier {
       if (_isPlaying) {
         print('🎵 Lecture en cours, démarrage ambiance');
         await _audioService.play();
+        print('✅ Ambiance démarrée avec succès: ${music.name}');
       } else {
         print('🎵 Lecture pas en cours, ambiance chargée mais pas démarrée');
       }
     } catch (e) {
-      print('❌ Erreur chargement musique: $e');
+      print('❌ Erreur chargement musique pour ${music.name}: $e');
       // Ne pas définir _currentAmbientMusic si le chargement échoue
       _currentAmbientMusic = null;
       notifyListeners();
