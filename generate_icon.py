@@ -18,6 +18,24 @@ def create_icon():
         img = Image.open(input_path)
         print(f"✅ Using existing icon: {input_path}")
         print(f"   Original size: {img.size[0]}x{img.size[1]} pixels")
+
+        # Auto-crop to focus on the main content (zoom effect)
+        # This removes transparent/white borders and focuses on the logo
+        if img.mode == 'RGBA':
+            # For PNG with transparency, crop to content
+            bbox = img.getbbox()
+            if bbox:
+                img = img.crop(bbox)
+                print(f"✅ Auto-cropped to content: {img.size[0]}x{img.size[1]} pixels")
+        else:
+            # For other formats, try to crop white/transparent borders
+            # Convert to ensure we have alpha channel for processing
+            img_rgba = img.convert('RGBA')
+            bbox = img_rgba.getbbox()
+            if bbox:
+                img = img_rgba.crop(bbox)
+                print(f"✅ Auto-cropped to content: {img.size[0]}x{img.size[1]} pixels")
+
     else:
         # Create default icon if none exists
         print(f"⚠️  No existing icon found, creating default icon")
@@ -70,8 +88,17 @@ def create_icon():
 
     # Ensure the base icon is 512x512 for consistency
     if img.size != (512, 512):
-        img = img.resize((512, 512), Image.Resampling.LANCZOS)
-        print(f"✅ Icon resized to: 512x512 pixels")
+        # Use thumbnail to maintain aspect ratio and fit within 512x512
+        img.thumbnail((512, 512), Image.Resampling.LANCZOS)
+
+        # Create a new 512x512 image and paste the resized icon centered
+        final_img = Image.new('RGBA', (512, 512), (0, 0, 0, 0))  # Transparent background
+        x = (512 - img.size[0]) // 2
+        y = (512 - img.size[1]) // 2
+        final_img.paste(img, (x, y), img if img.mode == 'RGBA' else None)
+
+        img = final_img
+        print(f"✅ Icon processed to: 512x512 pixels (centered)")
 
     # Create Android icons
     android_sizes = {
