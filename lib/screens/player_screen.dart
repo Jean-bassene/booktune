@@ -140,7 +140,7 @@ class PlayerScreen extends StatelessWidget {
       ),
       child: const Icon(
         Icons.book,
-        size: 120,
+        size: 180,
         color: Colors.white,
       ),
     );
