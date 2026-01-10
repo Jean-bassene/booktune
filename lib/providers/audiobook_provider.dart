@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../models/audiobook.dart';
 import '../models/ambient_music.dart';
@@ -18,14 +19,43 @@ class AudiobookProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  /// Charge tous les livres audio
+  /// Charge tous les livres audio avec vérification des fichiers
   Future<void> loadAudiobooks() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _audiobooks = await _db.getAllAudiobooks();
+      final rawBooks = await _db.getAllAudiobooks();
+      LoggingService.i('Livres chargés depuis BDD: ${rawBooks.length}');
+
+      // Vérifier l'existence des fichiers et filtrer les livres invalides
+      final validBooks = <Audiobook>[];
+      final invalidBooks = <Audiobook>[];
+
+      for (final book in rawBooks) {
+        final fileExists = await _checkFileExists(book.filePath);
+        if (fileExists) {
+          validBooks.add(book);
+        } else {
+          invalidBooks.add(book);
+          LoggingService.w(
+              'Fichier manquant pour livre: ${book.title} (${book.filePath})');
+        }
+      }
+
+      // Supprimer les livres avec fichiers manquants de la BDD
+      if (invalidBooks.isNotEmpty) {
+        LoggingService.i(
+            'Suppression de ${invalidBooks.length} livres avec fichiers manquants');
+        for (final book in invalidBooks) {
+          await _db.deleteAudiobook(book.id!);
+        }
+      }
+
+      _audiobooks = validBooks;
+      LoggingService.i(
+          'Livres valides après vérification: ${_audiobooks.length}');
     } catch (e) {
       _error = 'Erreur de chargement: $e';
       LoggingService.e('Erreur loadAudiobooks', e);
@@ -35,10 +65,46 @@ class AudiobookProvider with ChangeNotifier {
     }
   }
 
-  /// Charge toutes les musiques d'ambiance + presets
+  /// Charge toutes les musiques d'ambiance + presets avec vérification
   Future<void> loadAmbientMusic() async {
     try {
-      _ambientMusic = await _db.getAllAmbientMusic();
+      final rawMusic = await _db.getAllAmbientMusic();
+      LoggingService.i('Musiques chargées depuis BDD: ${rawMusic.length}');
+
+      // Vérifier l'existence des fichiers pour les musiques non-packagées
+      final validMusic = <AmbientMusic>[];
+      final invalidMusic = <AmbientMusic>[];
+
+      for (final music in rawMusic) {
+        // Les musiques packagées (assets) n'ont pas besoin de vérification
+        if (music.filePath.startsWith('assets/')) {
+          validMusic.add(music);
+        } else {
+          // Vérifier l'existence des fichiers importés
+          final fileExists = await _checkFileExists(music.filePath);
+          if (fileExists) {
+            validMusic.add(music);
+          } else {
+            invalidMusic.add(music);
+            LoggingService.w(
+                'Fichier manquant pour musique: ${music.name} (${music.filePath})');
+          }
+        }
+      }
+
+      // Supprimer les musiques avec fichiers manquants de la BDD
+      if (invalidMusic.isNotEmpty) {
+        LoggingService.i(
+            'Suppression de ${invalidMusic.length} musiques avec fichiers manquants');
+        for (final music in invalidMusic) {
+          await _db.deleteAmbientMusic(music.id!);
+        }
+      }
+
+      _ambientMusic = validMusic;
+      LoggingService.i(
+          'Musiques valides après vérification: ${_ambientMusic.length}');
+
       await _initializePresets();
       notifyListeners();
     } catch (e) {
@@ -154,6 +220,17 @@ class AudiobookProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       LoggingService.e('Erreur suppression musique', e);
+    }
+  }
+
+  /// Vérifie si un fichier existe
+  Future<bool> _checkFileExists(String filePath) async {
+    try {
+      final file = File(filePath);
+      return await file.exists();
+    } catch (e) {
+      LoggingService.w('Erreur vérification fichier: $filePath', e);
+      return false;
     }
   }
 }

@@ -31,8 +31,8 @@ class _LibraryScreenState extends State<LibraryScreen>
       });
     });
 
-    // Charger les données au démarrage
-    _loadData();
+    // Les données sont chargées dans HomeScreen, pas besoin ici
+    // Cela évite le double chargement
   }
 
   Future<void> _loadData() async {
