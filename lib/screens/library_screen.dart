@@ -1022,17 +1022,23 @@ class _LibraryScreenState extends State<LibraryScreen>
 
       for (var file in files) {
         try {
-          //
           debugPrint('Traitement fichier: ${file.path}');
 
           // Tous les fichiers sont traités comme des livres audio
           final audiobook = await importService.createAudiobookFromFile(file);
-          debugPrint('Livre créé: ${audiobook.title}');
+          debugPrint(
+              'Livre créé: ${audiobook.title} avec chemin: ${audiobook.filePath}');
+
           await provider.addAudiobook(audiobook);
-          debugPrint('Livre ajouté en BDD');
+          debugPrint('Livre ajouté via provider');
+
+          // Vérifier que le livre a été ajouté
+          final currentBooks = provider.audiobooks;
+          debugPrint('Nombre de livres après ajout: ${currentBooks.length}');
+
           audiobooksCount++;
         } catch (e, stackTrace) {
-          debugPrint('Erreur import: $e');
+          debugPrint('Erreur import livre: $e');
           debugPrint('StackTrace: $stackTrace');
         }
       }
