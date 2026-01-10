@@ -1,110 +1,211 @@
-import 'dart:async';
-import 'package:audio_service/audio_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../models/audiobook.dart';
 import '../models/librivox_book.dart';
 import '../providers/player_provider.dart';
 
-class MediaNotificationService {
+class NotificationService {
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
   static PlayerProvider? _playerProvider;
+  static int _currentNotificationId = 0;
 
   static void setPlayerProvider(PlayerProvider provider) {
     _playerProvider = provider;
   }
 
-  static Future<void> init() async {
-    await AudioService.init(
-      builder: () => _AudioHandler(),
-      config: const AudioServiceConfig(
-        androidNotificationChannelId: 'com.example.booktune.audio',
-        androidNotificationChannelName: 'BookTune Audio Playback',
-        androidNotificationOngoing: true,
-        androidStopForegroundOnPause: true,
+  static Future<void> initialize() async {
+    // Configuration Android
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    // Configuration iOS (si nécessaire plus tard)
+    const iosSettings = DarwinInitializationSettings();
+
+    // Initialisation
+    await _localNotifications.initialize(
+      InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
       ),
+      onDidReceiveNotificationResponse: _handleNotificationTap,
+    );
+
+    // Créer les canaux de notification
+    await _createNotificationChannels();
+  }
+
+  static Future<void> _createNotificationChannels() async {
+    final androidPlugin =
+        _localNotifications.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidPlugin != null) {
+      // Canal pour les notifications de lecture
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'booktune_playback',
+          'Lecture audio BookTune',
+          description: 'Notifications de contrôle de lecture audio',
+          importance: Importance.low,
+          playSound: false,
+          enableVibration: false,
+          showBadge: false,
+        ),
+      );
+
+      // Canal pour les notifications importantes
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'booktune_important',
+          'Notifications importantes',
+          description: 'Notifications importantes de BookTune',
+          importance: Importance.high,
+        ),
+      );
+    }
+  }
+
+  static Future<void> showPlaybackNotification(
+    Audiobook audiobook, {
+    String? chapterTitle,
+    bool isPlaying = true,
+  }) async {
+    final title = chapterTitle ?? audiobook.title;
+    final subtitle = 'par ${audiobook.author}';
+
+    final androidDetails = AndroidNotificationDetails(
+      'booktune_playback',
+      'Lecture audio BookTune',
+      channelDescription: 'Notifications de contrôle de lecture audio',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true,
+      playSound: false,
+      enableVibration: false,
+      showProgress: true,
+      maxProgress: 100,
+      progress: 0, // Sera mis à jour séparément
+      actions: [
+        AndroidNotificationAction(
+          isPlaying ? 'pause' : 'play',
+          isPlaying ? 'Pause' : 'Play',
+        ),
+        const AndroidNotificationAction('next', 'Suivant'),
+        const AndroidNotificationAction('stop', 'Stop'),
+      ],
+    );
+
+    final notificationDetails = NotificationDetails(android: androidDetails);
+
+    await _localNotifications.show(
+      _currentNotificationId,
+      title,
+      subtitle,
+      notificationDetails,
     );
   }
 
-  static Future<void> updateMediaItem(Audiobook audiobook,
-      {String? chapterTitle}) async {
-    try {
-      final mediaItem = MediaItem(
-        id: audiobook.id?.toString() ?? 'unknown',
-        album: 'BookTune',
-        title: chapterTitle ?? audiobook.title,
-        artist: audiobook.author,
-        duration: audiobook.duration != null
-            ? Duration(seconds: audiobook.duration!)
-            : null,
-      );
-      await AudioServiceBackground.setMediaItem(mediaItem);
-    } catch (e) {
-      print('Erreur mise à jour notification: $e');
+  static Future<void> showPlaybackNotificationFromLibrivox(
+    LibrivoxBook book,
+    String chapterTitle, {
+    bool isPlaying = true,
+  }) async {
+    final title = chapterTitle;
+    final subtitle = 'par ${book.author} • LibriVox';
+
+    final androidDetails = AndroidNotificationDetails(
+      'booktune_playback',
+      'Lecture audio BookTune',
+      channelDescription: 'Notifications de contrôle de lecture audio',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true,
+      playSound: false,
+      enableVibration: false,
+      actions: [
+        AndroidNotificationAction(
+          isPlaying ? 'pause' : 'play',
+          isPlaying ? 'Pause' : 'Play',
+        ),
+        const AndroidNotificationAction('next', 'Chapitre suivant'),
+        const AndroidNotificationAction('stop', 'Stop'),
+      ],
+    );
+
+    final notificationDetails = NotificationDetails(android: androidDetails);
+
+    await _localNotifications.show(
+      _currentNotificationId,
+      title,
+      subtitle,
+      notificationDetails,
+    );
+  }
+
+  static Future<void> updatePlaybackProgress(int progress) async {
+    final androidDetails = AndroidNotificationDetails(
+      'booktune_playback',
+      'Lecture audio BookTune',
+      channelDescription: 'Notifications de contrôle de lecture audio',
+      importance: Importance.low,
+      priority: Priority.low,
+      ongoing: true,
+      playSound: false,
+      enableVibration: false,
+      showProgress: true,
+      maxProgress: 100,
+      progress: progress,
+    );
+
+    await _localNotifications.show(
+      _currentNotificationId,
+      null, // Garde le titre actuel
+      null, // Garde le sous-titre actuel
+      NotificationDetails(android: androidDetails),
+    );
+  }
+
+  static Future<void> hidePlaybackNotification() async {
+    await _localNotifications.cancel(_currentNotificationId);
+  }
+
+  static void _handleNotificationTap(NotificationResponse response) async {
+    final actionId = response.actionId;
+
+    switch (actionId) {
+      case 'play':
+        await _playerProvider?.togglePlayPause();
+        break;
+      case 'pause':
+        await _playerProvider?.togglePlayPause();
+        break;
+      case 'next':
+        await _playerProvider?.playNextChapter();
+        break;
+      case 'stop':
+        await _playerProvider?.togglePlayPause();
+        await hidePlaybackNotification();
+        break;
     }
   }
 
-  static Future<void> updateMediaItemFromLibrivox(
-      LibrivoxBook book, String chapterTitle) async {
-    try {
-      final mediaItem = MediaItem(
-        id: book.id,
-        album: 'LibriVox',
-        title: chapterTitle,
-        artist: book.author,
-      );
-      await AudioServiceBackground.setMediaItem(mediaItem);
-    } catch (e) {
-      print('Erreur mise à jour notification LibriVox: $e');
-    }
-  }
+  static Future<void> showWelcomeNotification() async {
+    const androidDetails = AndroidNotificationDetails(
+      'booktune_important',
+      'Notifications importantes',
+      channelDescription: 'Notifications importantes de BookTune',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
 
-  static Future<void> updatePlaybackState(
-      bool isPlaying, Duration position, Duration? duration) async {
-    try {
-      await AudioServiceBackground.setState(
-        controls: [
-          MediaControl.skipToPrevious,
-          isPlaying ? MediaControl.pause : MediaControl.play,
-          MediaControl.skipToNext,
-          MediaControl.stop,
-        ],
-        processingState: AudioProcessingState.ready,
-        playing: isPlaying,
-        position: position,
-        speed: 1.0,
-      );
-    } catch (e) {
-      print('Erreur mise à jour état notification: $e');
-    }
-  }
-}
+    const notificationDetails = NotificationDetails(android: androidDetails);
 
-class _AudioHandler extends BaseAudioHandler with SeekHandler {
-  @override
-  Future<void> play() async {
-    await MediaNotificationService._playerProvider?.togglePlayPause();
-  }
-
-  @override
-  Future<void> pause() async {
-    await MediaNotificationService._playerProvider?.togglePlayPause();
-  }
-
-  @override
-  Future<void> stop() async {
-    await MediaNotificationService._playerProvider?.togglePlayPause();
-  }
-
-  @override
-  Future<void> seek(Duration position) async {
-    await MediaNotificationService._playerProvider?.seek(position);
-  }
-
-  @override
-  Future<void> skipToNext() async {
-    await MediaNotificationService._playerProvider?.playNextChapter();
-  }
-
-  @override
-  Future<void> skipToPrevious() async {
-    await MediaNotificationService._playerProvider?.playPreviousChapter();
+    await _localNotifications.show(
+      999,
+      'Bienvenue sur BookTune !',
+      'Votre lecteur audio avec musique d\'ambiance',
+      notificationDetails,
+    );
   }
 }

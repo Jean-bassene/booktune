@@ -88,6 +88,25 @@ class PlayerProvider with ChangeNotifier {
     _initListeners();
   }
 
+  /// Affiche la notification de lecture en cours
+  void _showPlaybackNotification() {
+    if (_currentAudiobook != null) {
+      NotificationService.showPlaybackNotification(
+        _currentAudiobook!,
+        isPlaying: _isPlaying,
+      );
+    } else if (_currentLibrivoxBook != null &&
+        _currentLibrivoxChapterIndex >= 0) {
+      final chapterTitle =
+          _currentLibrivoxBook!.chapters[_currentLibrivoxChapterIndex].title;
+      NotificationService.showPlaybackNotificationFromLibrivox(
+        _currentLibrivoxBook!,
+        chapterTitle,
+        isPlaying: _isPlaying,
+      );
+    }
+  }
+
   void _initListeners() {
     _positionSubscription = _audioService.positionStream.listen((position) {
       _position = position;
@@ -104,9 +123,13 @@ class PlayerProvider with ChangeNotifier {
     _stateSubscription = _audioService.playerStateStream.listen((state) {
       _isPlaying = state.playing;
 
-      // TODO: Notifications désactivées temporairement
-      // MediaNotificationService.updatePlaybackState(
-      //     _isPlaying, _position, _duration);
+      // Afficher/cacher la notification de lecture
+      if (_isPlaying &&
+          (_currentAudiobook != null || _currentLibrivoxBook != null)) {
+        _showPlaybackNotification();
+      } else {
+        NotificationService.hidePlaybackNotification();
+      }
 
       notifyListeners();
     });

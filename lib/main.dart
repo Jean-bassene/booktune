@@ -49,9 +49,9 @@ class MyApp extends StatelessWidget {
           final audiobookProvider = context.read<AudiobookProvider>();
           playerProvider.setAudiobookProvider(audiobookProvider);
 
-          // TODO: Notifications désactivées temporairement - audio_service incompatible
-          // MediaNotificationService.setPlayerProvider(playerProvider);
-          // MediaNotificationService.init();
+          // Initialiser les notifications modernes
+          NotificationService.setPlayerProvider(playerProvider);
+          NotificationService.initialize();
 
           return MaterialApp(
             title: 'Booktune',
