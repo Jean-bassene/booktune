@@ -11,76 +11,90 @@ class PlayerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.deepPurple.shade900,
-            Colors.blue.shade900,
-            Colors.indigo.shade900,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        child: Consumer<PlayerProvider>(
-          builder: (context, player, child) {
-            if (player.currentAudiobook == null) {
-              return _buildNoAudiobookState();
-            }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculer les tailles responsives
+        final screenHeight = MediaQuery.of(context).size.height;
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isSmallScreen = screenHeight < 700;
 
-            return GestureDetector(
-              onDoubleTap: player.togglePlayPause,
-              onHorizontalDragEnd: (details) {
-                // Swipe gauche = avancer 30s
-                if (details.primaryVelocity != null &&
-                    details.primaryVelocity! < -500) {
-                  final newPosition = player.position.inSeconds + 30;
-                  final maxDuration = player.currentAudiobook!.duration ?? 0;
-                  if (newPosition <= maxDuration) {
-                    player.seek(Duration(seconds: newPosition));
-                  }
+        // Espacements adaptatifs
+        final sectionSpacing = isSmallScreen ? 12.0 : 20.0;
+        final elementSpacing = isSmallScreen ? 8.0 : 16.0;
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.deepPurple.shade900,
+                Colors.blue.shade900,
+                Colors.indigo.shade900,
+              ],
+            ),
+          ),
+          child: SafeArea(
+            child: Consumer<PlayerProvider>(
+              builder: (context, player, child) {
+                if (player.currentAudiobook == null) {
+                  return _buildNoAudiobookState();
                 }
-                // Swipe droite = reculer 30s
-                else if (details.primaryVelocity != null &&
-                    details.primaryVelocity! > 500) {
-                  final newPosition = player.position.inSeconds - 30;
-                  if (newPosition >= 0) {
-                    player.seek(Duration(seconds: newPosition));
-                  } else {
-                    player.seek(Duration.zero);
-                  }
-                }
-              },
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      _buildArtwork(player),
-                      const SizedBox(height: 20),
-                      _buildTitle(player),
-                      const SizedBox(height: 20),
-                      _buildProgressBar(player),
-                      const SizedBox(height: 20),
-                      _buildPlaybackControls(player),
-                      const SizedBox(height: 20),
-                      _buildPlaybackSpeed(player),
-                      const SizedBox(height: 16),
-                      _buildSleepTimer(context, player),
-                      const SizedBox(height: 20),
-                      _buildVolumeControls(player),
-                      const SizedBox(height: 20),
-                      _buildAmbientSelector(context, player),
-                    ],
+
+                return GestureDetector(
+                  onDoubleTap: player.togglePlayPause,
+                  onHorizontalDragEnd: (details) {
+                    // Swipe gauche = avancer 30s
+                    if (details.primaryVelocity != null &&
+                        details.primaryVelocity! < -500) {
+                      final newPosition = player.position.inSeconds + 30;
+                      final maxDuration =
+                          player.currentAudiobook!.duration ?? 0;
+                      if (newPosition <= maxDuration) {
+                        player.seek(Duration(seconds: newPosition));
+                      }
+                    }
+                    // Swipe droite = reculer 30s
+                    else if (details.primaryVelocity != null &&
+                        details.primaryVelocity! > 500) {
+                      final newPosition = player.position.inSeconds - 30;
+                      if (newPosition >= 0) {
+                        player.seek(Duration(seconds: newPosition));
+                      } else {
+                        player.seek(Duration.zero);
+                      }
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
+                      child: Column(
+                        children: [
+                          _buildArtwork(player, screenWidth),
+                          SizedBox(height: sectionSpacing),
+                          _buildTitle(player),
+                          SizedBox(height: sectionSpacing),
+                          _buildProgressBar(player),
+                          SizedBox(height: sectionSpacing),
+                          _buildPlaybackControls(player, isSmallScreen),
+                          SizedBox(height: sectionSpacing),
+                          _buildPlaybackSpeed(player),
+                          SizedBox(height: elementSpacing),
+                          _buildSleepTimer(context, player),
+                          SizedBox(height: sectionSpacing),
+                          _buildVolumeControls(player),
+                          SizedBox(height: sectionSpacing),
+                          _buildAmbientSelector(context, player),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -116,10 +130,13 @@ class PlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildArtwork(PlayerProvider player) {
+  Widget _buildArtwork(PlayerProvider player, double screenWidth) {
+    // Taille adaptative selon la largeur d'écran
+    final artworkSize = screenWidth < 400 ? 240.0 : 280.0;
+
     return Container(
-      width: 280,
-      height: 280,
+      width: artworkSize,
+      height: artworkSize,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -238,12 +255,22 @@ class PlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaybackControls(PlayerProvider player) {
+  Widget _buildPlaybackControls(PlayerProvider player, bool isSmallScreen) {
+    // Tailles adaptatives pour les boutons
+    final buttonSize = isSmallScreen ? 48.0 : 60.0;
+    final iconSize = isSmallScreen ? 24.0 : 32.0;
+    final playButtonSize = isSmallScreen ? 50.0 : 60.0;
+    final playIconSize = isSmallScreen ? 28.0 : 32.0;
+    final spacing = isSmallScreen ? 6.0 : 8.0;
+    final sideSpacing = isSmallScreen ? 12.0 : 16.0;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Chapitre précédent
         Container(
+          width: buttonSize,
+          height: buttonSize,
           decoration: BoxDecoration(
             color: (player.hasPreviousChapter)
                 ? Colors.white.withOpacity(0.1)
@@ -257,13 +284,15 @@ class PlayerScreen extends StatelessWidget {
             color: (player.hasPreviousChapter)
                 ? Colors.white
                 : Colors.white.withOpacity(0.3),
-            iconSize: 32,
+            iconSize: iconSize,
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: spacing),
 
         // Reculer 15s
         Container(
+          width: buttonSize,
+          height: buttonSize,
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.1),
             shape: BoxShape.circle,
@@ -272,15 +301,15 @@ class PlayerScreen extends StatelessWidget {
             onPressed: player.skipBackward,
             icon: const Icon(Icons.replay_10),
             color: Colors.white,
-            iconSize: 28,
+            iconSize: iconSize - 4,
           ),
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: sideSpacing),
 
         // Play/Pause
         Container(
-          width: 60,
-          height: 60,
+          width: playButtonSize,
+          height: playButtonSize,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.blue.shade500, Colors.cyan.shade500],
@@ -298,16 +327,18 @@ class PlayerScreen extends StatelessWidget {
             onPressed: player.togglePlayPause,
             icon: Icon(
               player.isPlaying ? Icons.pause : Icons.play_arrow,
-              size: 32,
+              size: playIconSize,
             ),
             color: Colors.white,
           ),
         ),
 
-        const SizedBox(width: 16),
+        SizedBox(width: sideSpacing),
 
         // Avancer 15s
         Container(
+          width: buttonSize,
+          height: buttonSize,
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.1),
             shape: BoxShape.circle,
@@ -316,13 +347,15 @@ class PlayerScreen extends StatelessWidget {
             onPressed: player.skipForward,
             icon: const Icon(Icons.forward_10),
             color: Colors.white,
-            iconSize: 28,
+            iconSize: iconSize - 4,
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: spacing),
 
         // Chapitre suivant
         Container(
+          width: buttonSize,
+          height: buttonSize,
           decoration: BoxDecoration(
             color: (player.hasNextChapter)
                 ? Colors.white.withOpacity(0.1)
@@ -335,7 +368,7 @@ class PlayerScreen extends StatelessWidget {
             color: (player.hasNextChapter)
                 ? Colors.white
                 : Colors.white.withOpacity(0.3),
-            iconSize: 32,
+            iconSize: iconSize,
           ),
         ),
       ],
