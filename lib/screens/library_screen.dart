@@ -31,8 +31,8 @@ class _LibraryScreenState extends State<LibraryScreen>
       });
     });
 
-    // Charger les données au démarrage
-    _loadData();
+    // Les données sont chargées dans HomeScreen, pas besoin ici
+    // Cela évite le double chargement
   }
 
   Future<void> _loadData() async {
@@ -89,6 +89,8 @@ class _LibraryScreenState extends State<LibraryScreen>
 
   Widget _buildTabBar() {
     return Container(
+      height:
+          60, // ← Augmenté de la hauteur par défaut (~48px) à 60px pour plus d'espace
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -114,9 +116,11 @@ class _LibraryScreenState extends State<LibraryScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.book, size: 18),
-                SizedBox(width: 4),
-                Text('Livres', style: TextStyle(fontSize: 13)),
+                Icon(Icons.book, size: 20), // ← Légèrement agrandi
+                SizedBox(width: 6), // ← Un peu plus d'espace
+                Text('Livres',
+                    style:
+                        TextStyle(fontSize: 14)), // ← Texte un peu plus grand
               ],
             ),
           ),
@@ -124,9 +128,11 @@ class _LibraryScreenState extends State<LibraryScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.schedule, size: 18),
-                SizedBox(width: 4),
-                Text('Récents', style: TextStyle(fontSize: 13)),
+                Icon(Icons.schedule, size: 20), // ← Légèrement agrandi
+                SizedBox(width: 6), // ← Un peu plus d'espace
+                Text('Récents',
+                    style:
+                        TextStyle(fontSize: 14)), // ← Texte un peu plus grand
               ],
             ),
           ),
@@ -134,9 +140,11 @@ class _LibraryScreenState extends State<LibraryScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.music_note, size: 18),
-                SizedBox(width: 4),
-                Text('Ambiances', style: TextStyle(fontSize: 13)),
+                Icon(Icons.music_note, size: 20), // ← Légèrement agrandi
+                SizedBox(width: 6), // ← Un peu plus d'espace
+                Text('Ambiances',
+                    style:
+                        TextStyle(fontSize: 14)), // ← Texte un peu plus grand
               ],
             ),
           ),
@@ -621,8 +629,8 @@ class _LibraryScreenState extends State<LibraryScreen>
     final books = customList ?? provider.audiobooks;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: 16), // ← Réduit horizontal pour éviter overflow
+          horizontal: 4,
+          vertical: 16), // ← Réduit à 4px pour éviter tout overflow
       itemCount: books.length,
       itemBuilder: (context, index) {
         final audiobook = books[index];
@@ -638,7 +646,8 @@ class _LibraryScreenState extends State<LibraryScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(
-          horizontal: 8, vertical: 8), // ← Réduit pour éviter overflow
+          horizontal: 4,
+          vertical: 8), // ← Réduit à 4px horizontal pour éviter tout overflow
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
