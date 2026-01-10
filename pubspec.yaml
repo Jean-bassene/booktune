@@ -11,11 +11,11 @@ dependencies:
     sdk: flutter
   
   # Audio
-  just_audio: ^0.9.36
-  audio_service: ^0.18.12
+  just_audio: ^0.9.42
+  audio_service: ^0.18.15
 
   # Notifications médias
-  just_audio_background: ^0.0.1-beta.11
+  just_audio_background: ^0.0.1-beta.12
   
   # File picker (corrigé)
   file_picker: ^8.1.2
