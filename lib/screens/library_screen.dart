@@ -31,13 +31,17 @@ class _LibraryScreenState extends State<LibraryScreen>
       });
     });
 
-    // Charger les livres et ambiances au démarrage de l'écran
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Charger les données au démarrage
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    // Attendre que le widget soit monté
+    await Future.microtask(() async {
       final provider = context.read<AudiobookProvider>();
-      provider.loadAudiobooks();
-      provider.loadAmbientMusic();
-      // S'assurer que les presets sont toujours présents
-      provider.initializePresets();
+      await provider.loadAudiobooks();
+      await provider.loadAmbientMusic();
+      await provider.initializePresets();
     });
   }
 
