@@ -26,9 +26,15 @@ class AudiobookProvider with ChangeNotifier {
 
     try {
       _audiobooks = await _db.getAllAudiobooks();
+      print(
+          '📚 AudiobookProvider: ${_audiobooks.length} livres chargés depuis BDD');
+      for (final book in _audiobooks) {
+        print('   📖 Livre: ${book.title} - ${book.filePath}');
+      }
     } catch (e) {
       _error = 'Erreur de chargement: $e';
       LoggingService.e('Erreur loadAudiobooks', e);
+      print('❌ Erreur chargement livres: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -78,13 +84,18 @@ class AudiobookProvider with ChangeNotifier {
   /// Ajoute un livre audio
   Future<void> addAudiobook(Audiobook audiobook) async {
     try {
+      print('💾 Ajout livre: ${audiobook.title} - ${audiobook.filePath}');
       final newId = await _db.insertAudiobook(audiobook);
+      print('💾 Livre ajouté en BDD avec ID: $newId');
       final newAudiobook = audiobook.copyWith(id: newId);
       _audiobooks.add(newAudiobook);
+      print(
+          '📚 Livre ajouté à la liste (_audiobooks.length: ${_audiobooks.length})');
       notifyListeners();
     } catch (e) {
       _error = 'Erreur d\'ajout: $e';
       LoggingService.e('Erreur addAudiobook', e);
+      print('❌ Erreur ajout livre: $e');
       notifyListeners();
     }
   }
