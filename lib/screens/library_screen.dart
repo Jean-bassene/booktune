@@ -5,6 +5,7 @@ import '../providers/player_provider.dart';
 import '../models/audiobook.dart'; // Import direct pour Audiobook
 import '../models/ambient_music.dart'; // Import direct pour AmbientMusic
 import '../services/file_import_service.dart';
+import '../services/android_permissions_service.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -995,6 +996,14 @@ class _LibraryScreenState extends State<LibraryScreen>
 
   Future<void> _importFiles(BuildContext context) async {
     debugPrint('=== DEBUT IMPORT FICHIERS ===');
+
+    // Demander les permissions avant d'importer
+    try {
+      await AndroidPermissionsService.requestAllPermissions();
+    } catch (e) {
+      debugPrint('Erreur permissions: $e');
+    }
+
     final importService = FileImportService();
     final provider = context.read<AudiobookProvider>();
 

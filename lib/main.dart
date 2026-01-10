@@ -1,5 +1,6 @@
 import 'package:booktune/services/librivox_service.dart';
 import 'package:booktune/services/media_notification_service.dart';
+import 'package:booktune/services/android_permissions_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +26,22 @@ void main() async {
     ),
   );
 
+  // Demander les permissions essentielles au démarrage
+  await _requestEssentialPermissions();
+
   runApp(const MyApp());
+}
+
+Future<void> _requestEssentialPermissions() async {
+  try {
+    // Permissions pour les fichiers
+    await AndroidPermissionsService.requestAllPermissions();
+
+    // Permissions pour les notifications (Android 13+)
+    await AndroidPermissionsService.requestNotificationPermission();
+  } catch (e) {
+    print('Erreur lors de la demande de permissions: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {

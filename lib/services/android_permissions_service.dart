@@ -70,6 +70,17 @@ class AndroidPermissionsService {
     await openAppSettings();
   }
 
+  /// Demande spécifiquement la permission de notifications (Android 13+)
+  static Future<bool> requestNotificationPermission() async {
+    try {
+      final notificationStatus = await Permission.notification.request();
+      return notificationStatus.isGranted;
+    } catch (e) {
+      print('Erreur demande permission notifications: $e');
+      return false;
+    }
+  }
+
   /// Vérifie si toutes les permissions essentielles sont accordées
   static Future<bool> hasAllEssentialPermissions() async {
     final permissions = await requestAllPermissions();
