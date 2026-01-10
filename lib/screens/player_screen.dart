@@ -16,14 +16,24 @@ class PlayerScreen extends StatelessWidget {
         // Calculer les tailles responsives
         final screenHeight = MediaQuery.of(context).size.height;
         final screenWidth = MediaQuery.of(context).size.width;
+        final availableHeight = constraints.maxHeight;
         final isSmallScreen = screenHeight < 700;
         final isVerySmallScreen = screenWidth < 400;
+        final isVeryShortScreen = availableHeight < 600; // Écrans très courts
 
-        // Espacements adaptatifs
-        final sectionSpacing =
-            isVerySmallScreen ? 8.0 : (isSmallScreen ? 12.0 : 16.0);
-        final elementSpacing =
-            isVerySmallScreen ? 6.0 : (isSmallScreen ? 8.0 : 12.0);
+        // Espacements adaptatifs ultra-responsives
+        final sectionSpacing = isVeryShortScreen
+            ? 6.0
+            : (isVerySmallScreen ? 8.0 : (isSmallScreen ? 12.0 : 16.0));
+        final elementSpacing = isVeryShortScreen
+            ? 4.0
+            : (isVerySmallScreen ? 6.0 : (isSmallScreen ? 8.0 : 12.0));
+
+        // Tailles adaptatives selon la hauteur disponible
+        final artworkSize =
+            isVeryShortScreen ? 200.0 : (screenWidth < 400 ? 240.0 : 280.0);
+        final titleFontSize = isVeryShortScreen ? 18.0 : 22.0;
+        final subtitleFontSize = isVeryShortScreen ? 13.0 : 15.0;
 
         return Container(
           decoration: BoxDecoration(
@@ -74,7 +84,7 @@ class PlayerScreen extends StatelessWidget {
                         padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            _buildArtwork(player, screenWidth),
+                            _buildArtwork(player, screenWidth, artworkSize),
                             SizedBox(height: sectionSpacing),
                             _buildTitle(player),
                             SizedBox(height: sectionSpacing),
@@ -136,10 +146,8 @@ class PlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildArtwork(PlayerProvider player, double screenWidth) {
-    // Taille adaptative selon la largeur d'écran
-    final artworkSize = screenWidth < 400 ? 240.0 : 280.0;
-
+  Widget _buildArtwork(
+      PlayerProvider player, double screenWidth, double artworkSize) {
     return Container(
       width: artworkSize,
       height: artworkSize,
