@@ -320,7 +320,9 @@ class _LibraryScreenState extends State<LibraryScreen>
         final music = provider.ambientMusic[index];
         return Card(
           color: Colors.grey.shade900,
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8), // ← Cohérent avec OnlineLibraryScreen
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(color: Colors.purple.shade700, width: 0.5),
@@ -616,7 +618,7 @@ class _LibraryScreenState extends State<LibraryScreen>
       {List<Audiobook>? customList}) {
     final books = customList ?? provider.audiobooks;
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16), // ← Cohérent avec OnlineLibraryScreen
       itemCount: books.length,
       itemBuilder: (context, index) {
         final audiobook = books[index];
@@ -631,7 +633,8 @@ class _LibraryScreenState extends State<LibraryScreen>
         : 0.0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(
+          horizontal: 16, vertical: 8), // ← Cohérent avec OnlineLibraryScreen
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
