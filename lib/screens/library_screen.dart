@@ -1039,6 +1039,9 @@ class _LibraryScreenState extends State<LibraryScreen>
 
       if (context.mounted) {
         if (audiobooksCount > 0) {
+          // Recharger les livres depuis la base de données
+          await provider.loadAudiobooks();
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('$audiobooksCount livre(s) importé(s)'),
