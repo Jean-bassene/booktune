@@ -17,10 +17,13 @@ class PlayerScreen extends StatelessWidget {
         final screenHeight = MediaQuery.of(context).size.height;
         final screenWidth = MediaQuery.of(context).size.width;
         final isSmallScreen = screenHeight < 700;
+        final isVerySmallScreen = screenWidth < 400;
 
         // Espacements adaptatifs
-        final sectionSpacing = isSmallScreen ? 12.0 : 20.0;
-        final elementSpacing = isSmallScreen ? 8.0 : 16.0;
+        final sectionSpacing =
+            isVerySmallScreen ? 8.0 : (isSmallScreen ? 12.0 : 16.0);
+        final elementSpacing =
+            isVerySmallScreen ? 6.0 : (isSmallScreen ? 8.0 : 12.0);
 
         return Container(
           decoration: BoxDecoration(
@@ -65,29 +68,32 @@ class PlayerScreen extends StatelessWidget {
                       }
                     }
                   },
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
-                      child: Column(
-                        children: [
-                          _buildArtwork(player, screenWidth),
-                          SizedBox(height: sectionSpacing),
-                          _buildTitle(player),
-                          SizedBox(height: sectionSpacing),
-                          _buildProgressBar(player),
-                          SizedBox(height: sectionSpacing),
-                          _buildPlaybackControls(player, isSmallScreen),
-                          SizedBox(height: sectionSpacing),
-                          _buildPlaybackSpeed(player),
-                          SizedBox(height: elementSpacing),
-                          _buildSleepTimer(context, player),
-                          SizedBox(height: sectionSpacing),
-                          _buildVolumeControls(player),
-                          SizedBox(height: sectionSpacing),
-                          _buildAmbientSelector(context, player),
-                        ],
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            _buildArtwork(player, screenWidth),
+                            SizedBox(height: sectionSpacing),
+                            _buildTitle(player),
+                            SizedBox(height: sectionSpacing),
+                            _buildProgressBar(player),
+                            SizedBox(height: sectionSpacing),
+                            _buildPlaybackControls(player, isSmallScreen),
+                            SizedBox(height: sectionSpacing),
+                            _buildPlaybackSpeed(player),
+                            SizedBox(height: elementSpacing),
+                            _buildSleepTimer(context, player),
+                            SizedBox(height: sectionSpacing),
+                            _buildVolumeControls(player),
+                            SizedBox(height: sectionSpacing),
+                            _buildAmbientSelector(context, player),
+                            SizedBox(height: 20), // Espace final
+                          ]),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 );
               },
