@@ -89,8 +89,10 @@ class _LibraryScreenState extends State<LibraryScreen>
 
   Widget _buildTabBar() {
     return Container(
-      height:
-          60, // ← Augmenté de la hauteur par défaut (~48px) à 60px pour plus d'espace
+      constraints: const BoxConstraints(
+        minHeight: 48, // ← Hauteur minimale naturelle pour TabBar
+        maxHeight: 56, // ← Hauteur maximale pour éviter overflow
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -110,41 +112,41 @@ class _LibraryScreenState extends State<LibraryScreen>
               width: 3,
             ),
           ),
-        ), // ← Changé de UnderlineTabIndicator à BoxDecoration
+        ),
         tabs: const [
           Tab(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // ← Compact pour éviter expansion
               children: [
-                Icon(Icons.book, size: 20), // ← Légèrement agrandi
-                SizedBox(width: 6), // ← Un peu plus d'espace
+                Icon(Icons.book, size: 18), // ← Taille normale
+                SizedBox(width: 4), // ← Espace normal
                 Text('Livres',
-                    style:
-                        TextStyle(fontSize: 14)), // ← Texte un peu plus grand
+                    style: TextStyle(fontSize: 12)), // ← Taille compacte
               ],
             ),
           ),
           Tab(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // ← Compact
               children: [
-                Icon(Icons.schedule, size: 20), // ← Légèrement agrandi
-                SizedBox(width: 6), // ← Un peu plus d'espace
+                Icon(Icons.schedule, size: 18), // ← Taille normale
+                SizedBox(width: 4), // ← Espace normal
                 Text('Récents',
-                    style:
-                        TextStyle(fontSize: 14)), // ← Texte un peu plus grand
+                    style: TextStyle(fontSize: 12)), // ← Taille compacte
               ],
             ),
           ),
           Tab(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // ← Compact
               children: [
-                Icon(Icons.music_note, size: 20), // ← Légèrement agrandi
-                SizedBox(width: 6), // ← Un peu plus d'espace
+                Icon(Icons.music_note, size: 18), // ← Taille normale
+                SizedBox(width: 4), // ← Espace normal
                 Text('Ambiances',
-                    style:
-                        TextStyle(fontSize: 14)), // ← Texte un peu plus grand
+                    style: TextStyle(fontSize: 12)), // ← Taille compacte
               ],
             ),
           ),
