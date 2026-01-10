@@ -30,6 +30,11 @@ class _LibraryScreenState extends State<LibraryScreen>
         _searchQuery = _searchController.text.toLowerCase();
       });
     });
+
+    // Charger les livres au démarrage de l'écran
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AudiobookProvider>().loadAudiobooks();
+    });
   }
 
   @override
