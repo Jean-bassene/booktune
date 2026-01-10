@@ -92,13 +92,14 @@ class PlayerScreen extends StatelessWidget {
                             SizedBox(height: sectionSpacing),
                             _buildPlaybackControls(player, isSmallScreen),
                             SizedBox(height: sectionSpacing),
+                            _buildAmbientSelector(context,
+                                player), // ← Déplacé juste après les contrôles
+                            SizedBox(height: sectionSpacing),
                             _buildPlaybackSpeed(player),
                             SizedBox(height: elementSpacing),
                             _buildSleepTimer(context, player),
                             SizedBox(height: sectionSpacing),
                             _buildVolumeControls(player),
-                            SizedBox(height: sectionSpacing),
-                            _buildAmbientSelector(context, player),
                             SizedBox(height: 20), // Espace final
                           ]),
                         ),

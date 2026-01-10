@@ -26,17 +26,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-    // Charger les données au démarrage
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      print('🏠 HomeScreen: Chargement des données au démarrage...');
-      await context.read<AudiobookProvider>().loadAudiobooks();
-      await context.read<AudiobookProvider>().loadAmbientMusic();
 
-      // Vérifier que les données sont chargées
-      final provider = context.read<AudiobookProvider>();
-      print('🏠 HomeScreen: ${provider.audiobooks.length} livres chargés');
-      print('🏠 HomeScreen: ${provider.ambientMusic.length} musiques chargées');
-    });
+    // Charger les données immédiatement au démarrage
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    print('🏠 HomeScreen: Chargement des données au démarrage...');
+
+    final provider = context.read<AudiobookProvider>();
+    await provider.loadAudiobooks();
+    await provider.loadAmbientMusic();
+
+    // Vérifier que les données sont chargées
+    print('🏠 HomeScreen: ${provider.audiobooks.length} livres chargés');
+    print('🏠 HomeScreen: ${provider.ambientMusic.length} musiques chargées');
+
+    // Forcer une mise à jour de l'interface
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

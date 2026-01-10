@@ -31,8 +31,16 @@ class _LibraryScreenState extends State<LibraryScreen>
       });
     });
 
-    // Les données sont chargées dans HomeScreen, pas besoin ici
-    // Cela évite le double chargement
+    // S'assurer que les données sont chargées au cas où HomeScreen n'aurait pas pu le faire
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<AudiobookProvider>();
+      if (provider.audiobooks.isEmpty) {
+        print(
+            '📚 LibraryScreen: Aucune donnée chargée, tentative de rechargement...');
+        provider.loadAudiobooks();
+        provider.loadAmbientMusic();
+      }
+    });
   }
 
   Future<void> _loadData() async {
@@ -1088,9 +1096,14 @@ class _LibraryScreenState extends State<LibraryScreen>
           await provider.addAudiobook(audiobook);
           debugPrint('Livre ajouté via provider');
 
-          // Vérifier que le livre a été ajouté
+          // Recharger les données depuis la base pour vérifier la sauvegarde
+          await provider.loadAudiobooks();
+          debugPrint('Données rechargées depuis BDD après ajout');
+
+          // Vérifier que le livre a été ajouté en mémoire
           final currentBooks = provider.audiobooks;
-          debugPrint('Nombre de livres après ajout: ${currentBooks.length}');
+          debugPrint(
+              'Nombre de livres en mémoire après rechargement: ${currentBooks.length}');
 
           audiobooksCount++;
         } catch (e, stackTrace) {
