@@ -108,9 +108,9 @@ class _LibraryScreenState extends State<LibraryScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.book),
-                SizedBox(width: 8),
-                Text('Livres'),
+                Icon(Icons.book, size: 18),
+                SizedBox(width: 4),
+                Text('Livres', style: TextStyle(fontSize: 13)),
               ],
             ),
           ),
@@ -118,9 +118,9 @@ class _LibraryScreenState extends State<LibraryScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.schedule),
-                SizedBox(width: 8),
-                Text('Récents'),
+                Icon(Icons.schedule, size: 18),
+                SizedBox(width: 4),
+                Text('Récents', style: TextStyle(fontSize: 13)),
               ],
             ),
           ),
@@ -128,9 +128,9 @@ class _LibraryScreenState extends State<LibraryScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.music_note),
-                SizedBox(width: 8),
-                Text('Ambiances'),
+                Icon(Icons.music_note, size: 18),
+                SizedBox(width: 4),
+                Text('Ambiances', style: TextStyle(fontSize: 13)),
               ],
             ),
           ),

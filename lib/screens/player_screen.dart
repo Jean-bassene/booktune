@@ -59,19 +59,19 @@ class PlayerScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       _buildArtwork(player),
-                      const SizedBox(height: 30),
-                      _buildTitle(player),
-                      const SizedBox(height: 30),
-                      _buildProgressBar(player),
-                      const SizedBox(height: 30),
-                      _buildPlaybackControls(player),
-                      const SizedBox(height: 30),
-                      _buildPlaybackSpeed(player),
                       const SizedBox(height: 20),
+                      _buildTitle(player),
+                      const SizedBox(height: 20),
+                      _buildProgressBar(player),
+                      const SizedBox(height: 20),
+                      _buildPlaybackControls(player),
+                      const SizedBox(height: 20),
+                      _buildPlaybackSpeed(player),
+                      const SizedBox(height: 16),
                       _buildSleepTimer(context, player),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20),
                       _buildVolumeControls(player),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 20),
                       _buildAmbientSelector(context, player),
                     ],
                   ),
@@ -260,7 +260,7 @@ class PlayerScreen extends StatelessWidget {
             iconSize: 32,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
 
         // Reculer 15s
         Container(
@@ -272,15 +272,15 @@ class PlayerScreen extends StatelessWidget {
             onPressed: player.skipBackward,
             icon: const Icon(Icons.replay_10),
             color: Colors.white,
-            iconSize: 32,
+            iconSize: 28,
           ),
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 16),
 
         // Play/Pause
         Container(
-          width: 72,
-          height: 72,
+          width: 60,
+          height: 60,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.blue.shade500, Colors.cyan.shade500],
@@ -298,13 +298,13 @@ class PlayerScreen extends StatelessWidget {
             onPressed: player.togglePlayPause,
             icon: Icon(
               player.isPlaying ? Icons.pause : Icons.play_arrow,
-              size: 40,
+              size: 32,
             ),
             color: Colors.white,
           ),
         ),
 
-        const SizedBox(width: 20),
+        const SizedBox(width: 16),
 
         // Avancer 15s
         Container(
@@ -316,10 +316,10 @@ class PlayerScreen extends StatelessWidget {
             onPressed: player.skipForward,
             icon: const Icon(Icons.forward_10),
             color: Colors.white,
-            iconSize: 32,
+            iconSize: 28,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
 
         // Chapitre suivant
         Container(
