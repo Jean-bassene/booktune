@@ -4,6 +4,7 @@ import '../models/ambient_music.dart';
 import '../models/librivox_book.dart';
 import '../services/audio_player_service.dart';
 import '../services/logging_service.dart';
+import '../services/media_notification_service.dart';
 import 'audiobook_provider.dart';
 import 'dart:async';
 
@@ -102,6 +103,11 @@ class PlayerProvider with ChangeNotifier {
 
     _stateSubscription = _audioService.playerStateStream.listen((state) {
       _isPlaying = state.playing;
+
+      // Mettre à jour l'état des notifications médias
+      MediaNotificationService.updatePlaybackState(
+          _isPlaying, _position, _duration);
+
       notifyListeners();
     });
 
@@ -132,6 +138,10 @@ class PlayerProvider with ChangeNotifier {
       }
 
       await _audioService.setAudiobookVolume(_audiobookVolume);
+
+      // Mettre à jour les notifications médias
+      await MediaNotificationService.updateMediaItem(audiobook);
+
       await _audioService.play();
     } catch (e) {
       debugPrint('Erreur chargement audiobook: $e');
@@ -181,6 +191,13 @@ class PlayerProvider with ChangeNotifier {
       duration: chapter.duration.inSeconds,
     );
     await loadAndPlayAudiobook(tempAudiobook);
+
+    // Mettre à jour les notifications médias avec le titre du chapitre
+    final chapterTitle =
+        _currentLibrivoxBook!.chapters[_currentLibrivoxChapterIndex].title;
+    await MediaNotificationService.updateMediaItemFromLibrivox(
+        _currentLibrivoxBook!, chapterTitle);
+
     notifyListeners(); // Notify listeners that the chapter has changed
   }
 

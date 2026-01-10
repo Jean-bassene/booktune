@@ -1,4 +1,5 @@
 import 'package:booktune/services/librivox_service.dart';
+import 'package:booktune/services/media_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -47,6 +48,10 @@ class MyApp extends StatelessWidget {
           final playerProvider = context.read<PlayerProvider>();
           final audiobookProvider = context.read<AudiobookProvider>();
           playerProvider.setAudiobookProvider(audiobookProvider);
+
+          // Initialiser les notifications médias
+          MediaNotificationService.setPlayerProvider(playerProvider);
+          MediaNotificationService.init();
 
           return MaterialApp(
             title: 'Booktune',
