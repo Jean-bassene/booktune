@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/audiobook.dart';
@@ -19,9 +20,17 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
+    // Supprimer la base existante pour forcer la recréation avec la nouvelle structure
+    // TODO: À supprimer après la migration initiale
+    final dbFile = File(path);
+    if (await dbFile.exists()) {
+      await dbFile.delete();
+      print('Base de données supprimée pour migration');
+    }
+
     return await openDatabase(
       path,
-      version: 2, // Incrémenté pour migration
+      version: 3, // Nouvelle version pour forcer la recréation
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -30,7 +39,8 @@ class DatabaseService {
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       // Ajouter la colonne isFavorite si elle n'existe pas
-      await db.execute('ALTER TABLE audiobooks ADD COLUMN isFavorite INTEGER DEFAULT 0');
+      await db.execute(
+          'ALTER TABLE audiobooks ADD COLUMN isFavorite INTEGER DEFAULT 0');
     }
   }
 
@@ -50,7 +60,8 @@ class DatabaseService {
         lastPosition $intType,
         dateImported $intType,
         fileSize $intType,
-        isFavorite $intType DEFAULT 0
+        isFavorite $intType DEFAULT 0,
+        isNetwork $intType DEFAULT 0
       )
     ''');
 
