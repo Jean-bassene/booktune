@@ -203,7 +203,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('LibriVox Library'),
-        backgroundColor: Colors.deepPurple.shade900,
+        backgroundColor: Colors.blue.shade900,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -211,8 +211,8 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.deepPurple.shade900,
-              Colors.purple.shade900,
+              Colors.blue.shade900,
+              Colors.blue.shade800,
             ],
           ),
         ),
@@ -271,7 +271,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                 ),
                 child: DropdownButton<String>(
                   value: _selectedLanguage ?? 'All',
-                  dropdownColor: Colors.purple.shade800,
+                  dropdownColor: Colors.blue.shade800,
                   style: const TextStyle(color: Colors.white),
                   underline: const SizedBox(),
                   icon:
@@ -362,7 +362,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.purple.withOpacity(0.3),
+                              color: Colors.blue.withOpacity(0.3),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(

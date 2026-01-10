@@ -55,8 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.purple.shade900.withOpacity(0.8),
-              Colors.purple.shade900,
+              Colors.blue.shade900.withOpacity(0.8),
+              Colors.blue.shade900,
             ],
           ),
         ),
