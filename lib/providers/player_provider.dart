@@ -276,10 +276,10 @@ class PlayerProvider with ChangeNotifier {
     if (_currentAudiobook == null) return;
 
     if (_isPlaying) {
-      await _audioService.pause();
+      await _audioService.pause(); // Met en pause livre ET ambiance
       await _saveCurrentPosition();
     } else {
-      await _audioService.play();
+      await _audioService.play(); // Démarre livre ET ambiance si chargée
     }
   }
 
