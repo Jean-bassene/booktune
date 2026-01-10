@@ -11,7 +11,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity: FlutterActivity() {
+class MainActivity : FlutterActivity() {
     private val BATTERY_CHANNEL = "com.example.booktune/battery"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {

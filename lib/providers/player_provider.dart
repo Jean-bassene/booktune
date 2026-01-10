@@ -104,9 +104,9 @@ class PlayerProvider with ChangeNotifier {
     _stateSubscription = _audioService.playerStateStream.listen((state) {
       _isPlaying = state.playing;
 
-      // Mettre à jour l'état des notifications médias
-      MediaNotificationService.updatePlaybackState(
-          _isPlaying, _position, _duration);
+      // TODO: Notifications désactivées temporairement
+      // MediaNotificationService.updatePlaybackState(
+      //     _isPlaying, _position, _duration);
 
       notifyListeners();
     });
@@ -139,8 +139,8 @@ class PlayerProvider with ChangeNotifier {
 
       await _audioService.setAudiobookVolume(_audiobookVolume);
 
-      // Mettre à jour les notifications médias
-      await MediaNotificationService.updateMediaItem(audiobook);
+      // TODO: Notifications désactivées temporairement
+      // await MediaNotificationService.updateMediaItem(audiobook);
 
       await _audioService.play();
     } catch (e) {
@@ -192,11 +192,11 @@ class PlayerProvider with ChangeNotifier {
     );
     await loadAndPlayAudiobook(tempAudiobook);
 
-    // Mettre à jour les notifications médias pour LibriVox
-    final chapterTitle =
-        _currentLibrivoxBook!.chapters[_currentLibrivoxChapterIndex].title;
-    await MediaNotificationService.updateMediaItemFromLibrivox(
-        _currentLibrivoxBook!, chapterTitle);
+    // TODO: Notifications désactivées temporairement
+    // final chapterTitle =
+    //     _currentLibrivoxBook!.chapters[_currentLibrivoxChapterIndex].title;
+    // await MediaNotificationService.updateMediaItemFromLibrivox(
+    //     _currentLibrivoxBook!, chapterTitle);
 
     notifyListeners(); // Notify listeners that the chapter has changed
   }
