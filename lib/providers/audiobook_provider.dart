@@ -46,6 +46,16 @@ class AudiobookProvider with ChangeNotifier {
     }
   }
 
+  /// Initialise les ambiances pré-packagées (toujours, même si elles existent déjà)
+  Future<void> initializePresets() async {
+    try {
+      await _initializePresets();
+      notifyListeners();
+    } catch (e) {
+      LoggingService.e('Erreur initialisation presets', e);
+    }
+  }
+
   /// Initialise les ambiances pré-packagées si nécessaire
   Future<void> _initializePresets() async {
     try {

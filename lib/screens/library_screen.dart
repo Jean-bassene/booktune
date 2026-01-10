@@ -31,9 +31,13 @@ class _LibraryScreenState extends State<LibraryScreen>
       });
     });
 
-    // Charger les livres au démarrage de l'écran
+    // Charger les livres et ambiances au démarrage de l'écran
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AudiobookProvider>().loadAudiobooks();
+      final provider = context.read<AudiobookProvider>();
+      provider.loadAudiobooks();
+      provider.loadAmbientMusic();
+      // S'assurer que les presets sont toujours présents
+      provider.initializePresets();
     });
   }
 
@@ -1106,6 +1110,9 @@ class _LibraryScreenState extends State<LibraryScreen>
         }
 
         if (context.mounted) {
+          // Recharger les ambiances depuis la base de données
+          await provider.loadAmbientMusic();
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${files.length} musique(s) importée(s)'),
