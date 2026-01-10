@@ -25,7 +25,7 @@ class MediaNotificationService {
 
   static Future<void> updateMediaItem(Audiobook audiobook,
       {String? chapterTitle}) async {
-    if (AudioService.running) {
+    try {
       final mediaItem = MediaItem(
         id: audiobook.id?.toString() ?? 'unknown',
         album: 'BookTune',
@@ -36,12 +36,14 @@ class MediaNotificationService {
             : null,
       );
       await AudioServiceBackground.setMediaItem(mediaItem);
+    } catch (e) {
+      print('Erreur mise à jour notification: $e');
     }
   }
 
   static Future<void> updateMediaItemFromLibrivox(
       LibrivoxBook book, String chapterTitle) async {
-    if (AudioService.running) {
+    try {
       final mediaItem = MediaItem(
         id: book.id,
         album: 'LibriVox',
@@ -49,12 +51,14 @@ class MediaNotificationService {
         artist: book.author,
       );
       await AudioServiceBackground.setMediaItem(mediaItem);
+    } catch (e) {
+      print('Erreur mise à jour notification LibriVox: $e');
     }
   }
 
   static Future<void> updatePlaybackState(
       bool isPlaying, Duration position, Duration? duration) async {
-    if (AudioService.running) {
+    try {
       await AudioServiceBackground.setState(
         controls: [
           MediaControl.skipToPrevious,
@@ -67,6 +71,8 @@ class MediaNotificationService {
         position: position,
         speed: 1.0,
       );
+    } catch (e) {
+      print('Erreur mise à jour état notification: $e');
     }
   }
 }
