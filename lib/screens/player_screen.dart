@@ -270,7 +270,7 @@ class PlayerScreen extends StatelessWidget {
   }
 
   Widget _buildPlaybackControls(PlayerProvider player, bool isSmallScreen) {
-    // Tailles adaptatives pour les boutons
+    // Tailles adaptatives pour les boutons avec contraintes flexibles
     final buttonSize = isSmallScreen ? 48.0 : 60.0;
     final iconSize = isSmallScreen ? 24.0 : 32.0;
     final playButtonSize = isSmallScreen ? 50.0 : 60.0;
@@ -280,109 +280,131 @@ class PlayerScreen extends StatelessWidget {
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min, // ← IMPORTANT : Évite l'expansion infinie
       children: [
         // Chapitre précédent
-        Container(
-          width: buttonSize,
-          height: buttonSize,
-          decoration: BoxDecoration(
-            color: (player.hasPreviousChapter)
-                ? Colors.white.withOpacity(0.1)
-                : Colors.white.withOpacity(0.05),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            onPressed:
-                player.hasPreviousChapter ? player.playPreviousChapter : null,
-            icon: const Icon(Icons.skip_previous),
-            color: (player.hasPreviousChapter)
-                ? Colors.white
-                : Colors.white.withOpacity(0.3),
-            iconSize: iconSize,
+        Flexible(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: buttonSize,
+              maxHeight: buttonSize,
+            ),
+            decoration: BoxDecoration(
+              color: (player.hasPreviousChapter)
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed:
+                  player.hasPreviousChapter ? player.playPreviousChapter : null,
+              icon: const Icon(Icons.skip_previous),
+              color: (player.hasPreviousChapter)
+                  ? Colors.white
+                  : Colors.white.withOpacity(0.3),
+              iconSize: iconSize,
+            ),
           ),
         ),
         SizedBox(width: spacing),
 
         // Reculer 15s
-        Container(
-          width: buttonSize,
-          height: buttonSize,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            onPressed: player.skipBackward,
-            icon: const Icon(Icons.replay_10),
-            color: Colors.white,
-            iconSize: iconSize - 4,
+        Flexible(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: buttonSize,
+              maxHeight: buttonSize,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: player.skipBackward,
+              icon: const Icon(Icons.replay_10),
+              color: Colors.white,
+              iconSize: iconSize - 4,
+            ),
           ),
         ),
         SizedBox(width: sideSpacing),
 
-        // Play/Pause
-        Container(
-          width: playButtonSize,
-          height: playButtonSize,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue.shade500, Colors.cyan.shade500],
+        // Play/Pause - Priorité au bouton principal
+        Flexible(
+          flex: 2, // ← Plus d'espace pour le bouton principal
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: playButtonSize,
+              maxHeight: playButtonSize,
             ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.shade500.withOpacity(0.5),
-                blurRadius: 20,
-                offset: const Offset(0, 5),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade500, Colors.cyan.shade500],
               ),
-            ],
-          ),
-          child: IconButton(
-            onPressed: player.togglePlayPause,
-            icon: Icon(
-              player.isPlaying ? Icons.pause : Icons.play_arrow,
-              size: playIconSize,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.shade500.withOpacity(0.5),
+                  blurRadius: 20,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-            color: Colors.white,
+            child: IconButton(
+              onPressed: player.togglePlayPause,
+              icon: Icon(
+                player.isPlaying ? Icons.pause : Icons.play_arrow,
+                size: playIconSize,
+              ),
+              color: Colors.white,
+            ),
           ),
         ),
 
         SizedBox(width: sideSpacing),
 
         // Avancer 15s
-        Container(
-          width: buttonSize,
-          height: buttonSize,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            onPressed: player.skipForward,
-            icon: const Icon(Icons.forward_10),
-            color: Colors.white,
-            iconSize: iconSize - 4,
+        Flexible(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: buttonSize,
+              maxHeight: buttonSize,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: player.skipForward,
+              icon: const Icon(Icons.forward_10),
+              color: Colors.white,
+              iconSize: iconSize - 4,
+            ),
           ),
         ),
         SizedBox(width: spacing),
 
         // Chapitre suivant
-        Container(
-          width: buttonSize,
-          height: buttonSize,
-          decoration: BoxDecoration(
-            color: (player.hasNextChapter)
-                ? Colors.white.withOpacity(0.1)
-                : Colors.white.withOpacity(0.05),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            onPressed: player.hasNextChapter ? player.playNextChapter : null,
-            icon: const Icon(Icons.skip_next),
-            color: (player.hasNextChapter)
-                ? Colors.white
-                : Colors.white.withOpacity(0.3),
-            iconSize: iconSize,
+        Flexible(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: buttonSize,
+              maxHeight: buttonSize,
+            ),
+            decoration: BoxDecoration(
+              color: (player.hasNextChapter)
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: player.hasNextChapter ? player.playNextChapter : null,
+              icon: const Icon(Icons.skip_next),
+              color: (player.hasNextChapter)
+                  ? Colors.white
+                  : Colors.white.withOpacity(0.3),
+              iconSize: iconSize,
+            ),
           ),
         ),
       ],
