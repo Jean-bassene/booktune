@@ -101,12 +101,14 @@ class _LibraryScreenState extends State<LibraryScreen>
         controller: _tabController,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white70,
-        indicator: UnderlineTabIndicator(
-          borderSide: BorderSide(
-            color: Colors.blue.shade400,
-            width: 3,
+        indicator: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: Colors.blue.shade400,
+              width: 3,
+            ),
           ),
-        ),
+        ), // ← Changé de UnderlineTabIndicator à BoxDecoration
         tabs: const [
           Tab(
             child: Row(
