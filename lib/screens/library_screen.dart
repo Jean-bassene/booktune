@@ -321,8 +321,8 @@ class _LibraryScreenState extends State<LibraryScreen>
         return Card(
           color: Colors.grey.shade900,
           margin: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8), // ← Cohérent avec OnlineLibraryScreen
+              horizontal: 8,
+              vertical: 8), // ← Réduit pour cohérence avec livres
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(color: Colors.purple.shade700, width: 0.5),
@@ -618,7 +618,9 @@ class _LibraryScreenState extends State<LibraryScreen>
       {List<Audiobook>? customList}) {
     final books = customList ?? provider.audiobooks;
     return ListView.builder(
-      padding: const EdgeInsets.all(16), // ← Cohérent avec OnlineLibraryScreen
+      padding: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: 16), // ← Réduit horizontal pour éviter overflow
       itemCount: books.length,
       itemBuilder: (context, index) {
         final audiobook = books[index];
@@ -634,7 +636,7 @@ class _LibraryScreenState extends State<LibraryScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 8), // ← Cohérent avec OnlineLibraryScreen
+          horizontal: 8, vertical: 8), // ← Réduit pour éviter overflow
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
