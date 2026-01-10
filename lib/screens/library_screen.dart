@@ -429,74 +429,91 @@ class _LibraryScreenState extends State<LibraryScreen>
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min, // ← Évite l'expansion infinie
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Ma Bibliothèque',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+              Flexible(
+                flex: 3, // ← Plus d'espace pour le texte
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ma Bibliothèque',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis, // ← Coupe si trop long
                     ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Vos livres audio',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+                    SizedBox(height: 4),
+                    Text(
+                      'Vos livres audio',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis, // ← Coupe si trop long
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              IconButton(
-                onPressed: () {
-                  showMenu<String>(
-                    context: context,
-                    position: const RelativeRect.fromLTRB(100, 60, 0, 0),
-                    items: [
-                      const PopupMenuItem(
-                        value: 'audiobook',
-                        child: Row(
-                          children: [
-                            Icon(Icons.book, color: Colors.white),
-                            SizedBox(width: 12),
-                            Text('Importer un livre',
-                                style: TextStyle(color: Colors.white)),
+              Flexible(
+                flex: 1, // ← Espace minimal pour le bouton
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    onPressed: () {
+                      showMenu<String>(
+                        context: context,
+                        position: const RelativeRect.fromLTRB(100, 60, 0, 0),
+                        items: [
+                          const PopupMenuItem(
+                            value: 'audiobook',
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min, // ← Compact
+                              children: [
+                                Icon(Icons.book, color: Colors.white),
+                                SizedBox(width: 8), // ← Réduit
+                                Text('Importer un livre',
+                                    style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'ambient',
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min, // ← Compact
+                              children: [
+                                Icon(Icons.music_note, color: Colors.purple),
+                                SizedBox(width: 8), // ← Réduit
+                                Text('Importer une ambiance',
+                                    style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ).then((value) {
+                        if (value == 'audiobook') {
+                          _importFiles(context);
+                        } else if (value == 'ambient') {
+                          _importAmbientMusic(context);
+                        }
+                      });
+                    },
+                    icon: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.purple.shade400,
+                            Colors.pink.shade400
                           ],
                         ),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const PopupMenuItem(
-                        value: 'ambient',
-                        child: Row(
-                          children: [
-                            Icon(Icons.music_note, color: Colors.purple),
-                            SizedBox(width: 12),
-                            Text('Importer une ambiance',
-                                style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ).then((value) {
-                    if (value == 'audiobook') {
-                      _importFiles(context);
-                    } else if (value == 'ambient') {
-                      _importAmbientMusic(context);
-                    }
-                  });
-                },
-                icon: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.purple.shade400, Colors.pink.shade400],
+                      child: const Icon(Icons.add, color: Colors.white),
                     ),
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.add, color: Colors.white),
                 ),
               ),
             ],
@@ -636,54 +653,59 @@ class _LibraryScreenState extends State<LibraryScreen>
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
+              mainAxisSize: MainAxisSize.min, // ← Évite expansion infinie
               children: [
-                Stack(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.purple.shade400,
-                            Colors.pink.shade400
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.book,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                    if (audiobook.isFavorite)
-                      Positioned(
-                        top: -4,
-                        right: -4,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.amber,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.amber.withOpacity(0.5),
-                                blurRadius: 8,
-                              )
+                Flexible(
+                  flex: 0, // ← Taille fixe pour la couverture
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.purple.shade400,
+                              Colors.pink.shade400
                             ],
                           ),
-                          padding: const EdgeInsets.all(2),
-                          child: const Icon(
-                            Icons.star,
-                            color: Colors.white,
-                            size: 16,
-                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.book,
+                          color: Colors.white,
+                          size: 30,
                         ),
                       ),
-                  ],
+                      if (audiobook.isFavorite)
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.amber,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.amber.withOpacity(0.5),
+                                  blurRadius: 8,
+                                )
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(2),
+                            child: const Icon(
+                              Icons.star,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
+                Flexible(
+                  flex: 3, // ← Plus d'espace pour le texte
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -719,101 +741,109 @@ class _LibraryScreenState extends State<LibraryScreen>
                     ],
                   ),
                 ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white70),
-                  color: Colors.grey.shade900,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                Flexible(
+                  flex: 0, // ← Taille minimale pour le menu
+                  child: PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white70),
+                    color: Colors.grey.shade900,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (value) async {
+                      if (value == 'play') {
+                        context
+                            .read<PlayerProvider>()
+                            .loadAndPlayAudiobook(audiobook);
+                      } else if (value == 'play_amb') {
+                        context
+                            .read<PlayerProvider>()
+                            .loadAndPlayAudiobook(audiobook);
+                        _showAmbientPicker(context);
+                      } else if (value == 'ambiance') {
+                        _showAmbientPicker(context);
+                      } else if (value == 'favorite') {
+                        context
+                            .read<AudiobookProvider>()
+                            .toggleFavorite(audiobook.id!);
+                      } else if (value == 'delete') {
+                        _showDeleteDialog(context, audiobook);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'play',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // ← Compact
+                          children: [
+                            Icon(Icons.play_circle_outline,
+                                color: Colors.white70),
+                            SizedBox(width: 8), // ← Réduit
+                            Text('Lire', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'play_amb',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // ← Compact
+                          children: [
+                            Icon(Icons.playlist_play, color: Colors.white70),
+                            SizedBox(width: 8), // ← Réduit
+                            Text('Lire + Ambiance',
+                                style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'ambiance',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // ← Compact
+                          children: [
+                            Icon(Icons.queue_music, color: Colors.white70),
+                            SizedBox(width: 8), // ← Réduit
+                            Text('Ambiance',
+                                style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'favorite',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // ← Compact
+                          children: [
+                            Icon(
+                              audiobook.isFavorite
+                                  ? Icons.star
+                                  : Icons.star_outline,
+                              color: audiobook.isFavorite
+                                  ? Colors.amber
+                                  : Colors.white70,
+                            ),
+                            const SizedBox(width: 8), // ← Réduit
+                            Text(
+                              audiobook.isFavorite
+                                  ? 'Retirer des favoris'
+                                  : 'Ajouter aux favoris',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // ← Compact
+                          children: [
+                            Icon(Icons.remove_circle_outline,
+                                color: Colors.orange),
+                            SizedBox(width: 8), // ← Réduit
+                            Text('Retirer',
+                                style: TextStyle(color: Colors.orange)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  onSelected: (value) async {
-                    if (value == 'play') {
-                      context
-                          .read<PlayerProvider>()
-                          .loadAndPlayAudiobook(audiobook);
-                    } else if (value == 'play_amb') {
-                      context
-                          .read<PlayerProvider>()
-                          .loadAndPlayAudiobook(audiobook);
-                      _showAmbientPicker(context);
-                    } else if (value == 'ambiance') {
-                      _showAmbientPicker(context);
-                    } else if (value == 'favorite') {
-                      context
-                          .read<AudiobookProvider>()
-                          .toggleFavorite(audiobook.id!);
-                    } else if (value == 'delete') {
-                      _showDeleteDialog(context, audiobook);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'play',
-                      child: Row(
-                        children: [
-                          Icon(Icons.play_circle_outline,
-                              color: Colors.white70),
-                          SizedBox(width: 12),
-                          Text('Lire', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'play_amb',
-                      child: Row(
-                        children: [
-                          Icon(Icons.playlist_play, color: Colors.white70),
-                          SizedBox(width: 12),
-                          Text('Lire + Ambiance',
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'ambiance',
-                      child: Row(
-                        children: [
-                          Icon(Icons.queue_music, color: Colors.white70),
-                          SizedBox(width: 12),
-                          Text('Ambiance',
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem(
-                      value: 'favorite',
-                      child: Row(
-                        children: [
-                          Icon(
-                            audiobook.isFavorite
-                                ? Icons.star
-                                : Icons.star_outline,
-                            color: audiobook.isFavorite
-                                ? Colors.amber
-                                : Colors.white70,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            audiobook.isFavorite
-                                ? 'Retirer des favoris'
-                                : 'Ajouter aux favoris',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.remove_circle_outline,
-                              color: Colors.orange),
-                          SizedBox(width: 12),
-                          Text('Retirer',
-                              style: TextStyle(color: Colors.orange)),
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
