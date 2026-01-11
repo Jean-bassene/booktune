@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/audiobook_provider.dart';
 import '../providers/player_provider.dart';
+import '../providers/downloaded_books_provider.dart';
 import '../models/audiobook.dart'; // Import direct pour Audiobook
 import '../models/ambient_music.dart'; // Import direct pour AmbientMusic
+import '../models/downloaded_book.dart'; // Import pour DownloadedBook
 import '../services/file_import_service.dart';
 import '../services/android_permissions_service.dart';
 
@@ -33,13 +35,18 @@ class _LibraryScreenState extends State<LibraryScreen>
 
     // S'assurer que les données sont chargées au cas où HomeScreen n'aurait pas pu le faire
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<AudiobookProvider>();
-      if (provider.audiobooks.isEmpty) {
+      final audiobookProvider = context.read<AudiobookProvider>();
+      final downloadedBooksProvider = context.read<DownloadedBooksProvider>();
+
+      if (audiobookProvider.audiobooks.isEmpty) {
         print(
             '📚 LibraryScreen: Aucune donnée chargée, tentative de rechargement...');
-        provider.loadAudiobooks();
-        provider.loadAmbientMusic();
+        audiobookProvider.loadAudiobooks();
+        audiobookProvider.loadAmbientMusic();
       }
+
+      // Initialiser les livres téléchargés
+      downloadedBooksProvider.initialize();
     });
   }
 
@@ -164,21 +171,37 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Widget _buildAudiobooksTab(BuildContext context) {
-    return Consumer<AudiobookProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
+    return Consumer2<AudiobookProvider, DownloadedBooksProvider>(
+      builder: (context, audiobookProvider, downloadedProvider, child) {
+        if (audiobookProvider.isLoading || downloadedProvider.isLoading) {
           return const Center(
             child: CircularProgressIndicator(color: Colors.white),
           );
         }
 
-        // Filtrer les livres selon la recherche
-        final filtered = provider.audiobooks.where((book) {
-          return book.title.toLowerCase().contains(_searchQuery) ||
-              book.author.toLowerCase().contains(_searchQuery);
+        // Combiner les livres locaux et téléchargés
+        final allBooks = <dynamic>[];
+
+        // Ajouter les livres locaux avec un marqueur
+        for (final book in audiobookProvider.audiobooks) {
+          allBooks.add({'type': 'local', 'book': book});
+        }
+
+        // Ajouter les livres téléchargés avec un marqueur
+        for (final book in downloadedProvider.downloadedBooks) {
+          allBooks.add({'type': 'downloaded', 'book': book});
+        }
+
+        // Filtrer selon la recherche
+        final filtered = allBooks.where((item) {
+          final book = item['book'];
+          final title = book.title.toLowerCase();
+          final author = book.author.toLowerCase();
+          final query = _searchQuery.toLowerCase();
+          return title.contains(query) || author.contains(query);
         }).toList();
 
-        if (provider.audiobooks.isEmpty) {
+        if (allBooks.isEmpty) {
           return _buildEmptyState(context);
         }
 
@@ -206,8 +229,12 @@ class _LibraryScreenState extends State<LibraryScreen>
           );
         }
 
-        return _buildAudiobookList(context, provider,
-            customList: filtered.isNotEmpty ? filtered : null);
+        return _buildCombinedAudiobookList(
+          context,
+          audiobookProvider,
+          downloadedProvider,
+          filtered,
+        );
       },
     );
   }
@@ -647,6 +674,285 @@ class _LibraryScreenState extends State<LibraryScreen>
         return _buildAudiobookCard(context, audiobook);
       },
     );
+  }
+
+  Widget _buildCombinedAudiobookList(
+    BuildContext context,
+    AudiobookProvider audiobookProvider,
+    DownloadedBooksProvider downloadedProvider,
+    List<dynamic> combinedBooks,
+  ) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
+      itemCount: combinedBooks.length,
+      itemBuilder: (context, index) {
+        final item = combinedBooks[index];
+        final type = item['type'] as String;
+        final book = item['book'];
+
+        if (type == 'local') {
+          return _buildAudiobookCard(context, book as Audiobook);
+        } else if (type == 'downloaded') {
+          return _buildDownloadedBookCard(context, book as DownloadedBook);
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildDownloadedBookCard(BuildContext context, DownloadedBook book) {
+    final progress = book.listeningProgress;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color:
+              Colors.green.withOpacity(0.3), // Bordure verte pour différencier
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // Charger et jouer le livre téléchargé
+            context.read<PlayerProvider>().loadAndPlayDownloadedBook(book);
+          },
+          onLongPress: () {
+            _showDeleteDownloadedBookDialog(context, book);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  flex: 0,
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.green.shade400,
+                              Colors.teal.shade500,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.cloud_download,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                      // Badge "Téléchargé"
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade600,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'LIBRI',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Flexible(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        book.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        book.author,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 12,
+                            color: Colors.white54,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${book.chapters.length} chapitres • ${book.formattedSize}',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (progress > 0) ...[
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.white24,
+                          valueColor:
+                              AlwaysStoppedAnimation(Colors.green.shade400),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Flexible(
+                  flex: 0,
+                  child: PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white70),
+                    color: Colors.grey.shade900,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (value) async {
+                      if (value == 'play') {
+                        context
+                            .read<PlayerProvider>()
+                            .loadAndPlayDownloadedBook(book);
+                      } else if (value == 'delete') {
+                        _showDeleteDownloadedBookDialog(context, book);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'play',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.play_circle_outline,
+                                color: Colors.white70),
+                            SizedBox(width: 8),
+                            Text('Lire', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.delete_outline, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Supprimer',
+                                style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteDownloadedBookDialog(
+      BuildContext context, DownloadedBook book) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Supprimer le livre téléchargé ?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Voulez-vous supprimer "${book.title}" de votre bibliothèque ?\n\n'
+          'Cela supprimera également tous les fichiers audio téléchargés.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Annuler',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteDownloadedBook(context, book);
+            },
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteDownloadedBook(
+      BuildContext context, DownloadedBook book) async {
+    try {
+      final provider = context.read<DownloadedBooksProvider>();
+      await provider.removeDownloadedBook(book.id);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${book.title}" supprimé'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur suppression: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildAudiobookCard(BuildContext context, Audiobook audiobook) {

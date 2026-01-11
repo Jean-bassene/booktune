@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/audiobook.dart';
 import '../models/ambient_music.dart';
 import '../models/librivox_book.dart';
+import '../models/downloaded_book.dart';
 import '../services/audio_player_service.dart';
 import '../services/logging_service.dart';
 import '../services/media_notification_service.dart';
@@ -374,6 +375,30 @@ class PlayerProvider with ChangeNotifier {
     _sleepTimer?.cancel();
     _sleepTimerMinutes = 0;
     notifyListeners();
+  }
+
+  /// Charge et joue un livre téléchargé depuis LibriVox
+  Future<void> loadAndPlayDownloadedBook(DownloadedBook book) async {
+    _currentLibrivoxBook = LibrivoxBook(
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      description: book.description,
+      language: book.language,
+      totalDuration: Duration(seconds: book.totalTimeSeconds),
+      chapters: book.chapters
+          .map((chapter) => LibrivoxChapter(
+                title: chapter.title,
+                url: chapter.localFilePath,
+                trackNumber: book.chapters.indexOf(chapter) + 1,
+                duration: chapter.duration,
+              ))
+          .toList(),
+    );
+
+    // Commencer par le premier chapitre
+    _currentLibrivoxChapterIndex = 0;
+    await _loadAndPlayLibrivoxChapterAtIndex();
   }
 
   @override
