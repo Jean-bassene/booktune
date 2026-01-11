@@ -132,6 +132,28 @@ Ces paramètres garantissent que :
     }
   }
 
+  /// Détecte si c'est un appareil Honor/Huawei avec optimisations agressives
+  static Future<bool> isHonorDevice() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+
+      final manufacturer = androidInfo.manufacturer.toLowerCase();
+      final brand = androidInfo.brand.toLowerCase();
+      final model = androidInfo.model.toLowerCase();
+
+      // Détecter Honor/Huawei
+      return manufacturer.contains('huawei') ||
+          manufacturer.contains('honor') ||
+          brand.contains('huawei') ||
+          brand.contains('honor') ||
+          model.contains('honor');
+    } catch (e) {
+      print('Erreur détection Honor: $e');
+      return false;
+    }
+  }
+
   /// Ouvre les paramètres de batterie directement
   static Future<void> openBatteryOptimizationSettings() async {
     try {
@@ -152,6 +174,8 @@ Ces paramètres garantissent que :
     final isExempted = await checkBatteryOptimizationExemption();
     if (isExempted) return; // Déjà exempté
 
+    final isHonor = await isHonorDevice();
+
     if (!context.mounted) return;
 
     return showDialog(
@@ -162,18 +186,29 @@ Ces paramètres garantissent que :
           backgroundColor: Colors.grey.shade900,
           title: Row(
             children: [
-              Icon(Icons.battery_alert, color: Colors.orange.shade400),
+              Icon(Icons.battery_alert,
+                  color:
+                      isHonor ? Colors.red.shade400 : Colors.orange.shade400),
               const SizedBox(width: 8),
-              const Text(
-                'Optimisation Batterie',
-                style: TextStyle(color: Colors.white),
+              Text(
+                isHonor
+                    ? '⚠️ Honor: Configuration Requise'
+                    : 'Optimisation Batterie',
+                style: const TextStyle(color: Colors.white),
               ),
             ],
           ),
-          content: const Text(
-            'Pour une lecture audio continue, Booktune doit être exempté des optimisations de batterie Android.\n\n'
-            'Cela permet à l\'app de fonctionner en arrière-plan sans interruption.',
-            style: TextStyle(color: Colors.white70),
+          content: Text(
+            isHonor
+                ? 'Votre Honor X5 a des optimisations batterie très agressives. '
+                    'Pour éviter les coupures audio après 2-3 minutes :\n\n'
+                    '1. Désactivez "Optimisation batterie" pour Booktune\n'
+                    '2. Autorisez "Démarrage automatique"\n'
+                    '3. Activez "Verrouillage d\'app"\n\n'
+                    'Ces réglages sont essentiels pour Honor.'
+                : 'Pour une lecture audio continue, Booktune doit être exempté des optimisations de batterie Android.\n\n'
+                    'Cela permet à l\'app de fonctionner en arrière-plan sans interruption.',
+            style: const TextStyle(color: Colors.white70),
           ),
           actions: [
             TextButton(
@@ -189,9 +224,10 @@ Ces paramètres garantissent que :
                 await openBatteryOptimizationSettings();
               },
               icon: const Icon(Icons.settings),
-              label: const Text('Configurer'),
+              label: Text(isHonor ? 'Configurer Honor' : 'Configurer'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade600,
+                backgroundColor:
+                    isHonor ? Colors.red.shade600 : Colors.blue.shade600,
                 foregroundColor: Colors.white,
               ),
             ),
