@@ -70,7 +70,7 @@ class LibrivoxService {
     }
   }
 
-  /// Recherche avec debouncing et cache
+  /// Recherche avec debouncing et cache - Recherche améliorée par auteur et titre
   Future<List<LibrivoxBook>> searchBooks(
     String query, {
     bool useDebounce = true,
@@ -92,16 +92,78 @@ class LibrivoxService {
     }
 
     try {
+      final List<LibrivoxBook> allResults = [];
+
+      // 1. Recherche par auteur
+      final authorResults =
+          await _searchByField(query, 'author', limit, offset);
+      allResults.addAll(authorResults);
+
+      // 2. Si peu de résultats par auteur, recherche par titre
+      if (authorResults.length < 5) {
+        final titleResults =
+            await _searchByField(query, 'title', limit, offset);
+        // Éviter les doublons
+        for (final book in titleResults) {
+          if (!allResults.any((existing) => existing.id == book.id)) {
+            allResults.add(book);
+          }
+        }
+      }
+
+      // 3. Si toujours peu de résultats, recherche générale
+      if (allResults.length < 5) {
+        final generalResults = await _searchGeneral(query, limit, offset);
+        // Éviter les doublons
+        for (final book in generalResults) {
+          if (!allResults.any((existing) => existing.id == book.id)) {
+            allResults.add(book);
+          }
+        }
+      }
+
+      // Limiter les résultats
+      final limitedResults = allResults.take(limit).toList();
+
+      // Mettre en cache
+      _searchCache[cacheKey] = CachedData(limitedResults, DateTime.now());
+
+      LoggingService.i(
+          'Recherche améliorée "$query": ${limitedResults.length} résultats');
+      return limitedResults;
+    } on TimeoutException {
+      LoggingService.e('Timeout recherche "$query"');
+      return _searchCache[cacheKey]?.data ?? [];
+    } catch (e) {
+      LoggingService.e('Erreur searchBooks', e);
+      return _searchCache[cacheKey]?.data ?? [];
+    }
+  }
+
+  /// Recherche par un champ spécifique (author, title, ou general)
+  Future<List<LibrivoxBook>> _searchByField(
+    String query,
+    String field,
+    int limit,
+    int offset,
+  ) async {
+    try {
       final queryParams = {
         'format': 'json',
-        'author': query, // Recherche par auteur
         'limit': limit.toString(),
         'offset': offset.toString(),
       };
 
+      // Ajouter le champ de recherche approprié
+      if (field == 'author') {
+        queryParams['author'] = query;
+      } else if (field == 'title') {
+        queryParams['title'] = query;
+      }
+
       final url =
           Uri.parse(_librivoxSearchUrl).replace(queryParameters: queryParams);
-      LoggingService.d('[searchBooks] URL auteur: $url');
+      LoggingService.d('[searchBooks] URL $field: $url');
 
       final response = await _httpClient.get(url).timeout(_requestTimeout);
 
@@ -117,31 +179,68 @@ class LibrivoxService {
           }
         }
 
-        // Mettre en cache
-        _searchCache[cacheKey] = CachedData(books, DateTime.now());
-
-        LoggingService.i('Recherche API "$query": ${books.length} résultats');
+        LoggingService.d(
+            'Recherche $field "$query": ${books.length} résultats');
         return books;
       } else if (response.statusCode == 402 || response.statusCode == 429) {
-        // API limitée (402 = Payment Required, 429 = Rate limit)
-        // Utiliser recherche locale dans les livres récents
+        // API limitée - utiliser recherche locale
         LoggingService.w(
             'API LibriVox limitée (${response.statusCode}), recherche locale');
         return _localSearchFallback(query);
-      } else if (response.statusCode == 404) {
-        // Aucun résultat trouvé
-        LoggingService.w('Aucun résultat pour "$query"');
-        return [];
       } else {
-        LoggingService.e('Erreur API LibriVox: status ${response.statusCode}');
-        return _searchCache[cacheKey]?.data ?? [];
+        LoggingService.w(
+            'Erreur API $field "${query}": ${response.statusCode}');
+        return [];
       }
-    } on TimeoutException {
-      LoggingService.e('Timeout recherche "$query"');
-      return _searchCache[cacheKey]?.data ?? [];
     } catch (e) {
-      LoggingService.e('Erreur searchBooks', e);
-      return _searchCache[cacheKey]?.data ?? [];
+      LoggingService.e('Erreur _searchByField $field', e);
+      return [];
+    }
+  }
+
+  /// Recherche générale (sans champ spécifique)
+  Future<List<LibrivoxBook>> _searchGeneral(
+    String query,
+    int limit,
+    int offset,
+  ) async {
+    try {
+      final queryParams = {
+        'format': 'json',
+        'q': query, // Recherche générale
+        'limit': limit.toString(),
+        'offset': offset.toString(),
+      };
+
+      final url =
+          Uri.parse(_librivoxSearchUrl).replace(queryParameters: queryParams);
+      LoggingService.d('[searchBooks] URL général: $url');
+
+      final response = await _httpClient.get(url).timeout(_requestTimeout);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List<LibrivoxBook> books = [];
+
+        if (data != null && data['books'] is List) {
+          for (final bookData in data['books']) {
+            if (bookData['id'] != null) {
+              books.add(LibrivoxBook.fromLibrivoxApiJson(bookData));
+            }
+          }
+        }
+
+        LoggingService.d(
+            'Recherche générale "$query": ${books.length} résultats');
+        return books;
+      } else {
+        LoggingService.w(
+            'Erreur API générale "${query}": ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      LoggingService.e('Erreur _searchGeneral', e);
+      return [];
     }
   }
 
@@ -391,19 +490,63 @@ class LibrivoxService {
   }
 
   /// Recherche locale dans les livres récents (fallback quand API limitée)
+  /// Recherche améliorée : mots partiels, prénoms, noms séparés, etc.
   Future<List<LibrivoxBook>> _localSearchFallback(String query) async {
     if (query.isEmpty) return getRecentBooks();
 
     try {
       // Récupérer les livres récents
       final recentBooks = await getRecentBooks();
-      final queryLower = query.toLowerCase();
+      final queryLower = query.toLowerCase().trim();
+      final queryWords = queryLower.split(RegExp(r'\s+')); // Diviser en mots
 
-      // Filtrer par titre ou auteur
-      return recentBooks.where((book) {
-        return book.title.toLowerCase().contains(queryLower) ||
-            book.author.toLowerCase().contains(queryLower);
-      }).toList();
+      // Fonction pour vérifier si un livre correspond à la recherche
+      bool matchesBook(LibrivoxBook book) {
+        final titleLower = book.title.toLowerCase();
+        final authorLower = book.author.toLowerCase();
+
+        // Recherche complète (titre ou auteur contient la requête entière)
+        if (titleLower.contains(queryLower) ||
+            authorLower.contains(queryLower)) {
+          return true;
+        }
+
+        // Recherche par mots individuels
+        for (final word in queryWords) {
+          if (word.length < 2) continue; // Ignorer les mots trop courts
+
+          // Recherche dans titre et auteur
+          if (titleLower.contains(word) || authorLower.contains(word)) {
+            return true;
+          }
+        }
+
+        // Recherche floue pour les auteurs (prénoms, noms séparés)
+        // Ex: "Alexandre" devrait trouver "Alexandre Dumas"
+        // Ex: "Victor" devrait trouver "Victor Hugo"
+        if (authorLower != 'unknown author') {
+          for (final word in queryWords) {
+            if (word.length >= 3) {
+              // Au moins 3 caractères
+              final authorWords = authorLower.split(RegExp(r'[,\s]+'));
+              for (final authorWord in authorWords) {
+                if (authorWord.contains(word) || word.contains(authorWord)) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+
+        return false;
+      }
+
+      // Appliquer le filtre
+      final results = recentBooks.where(matchesBook).toList();
+
+      LoggingService.i(
+          'Recherche locale "$query": ${results.length} résultats trouvés');
+      return results;
     } catch (e) {
       LoggingService.e('Erreur _localSearchFallback', e);
       return [];
