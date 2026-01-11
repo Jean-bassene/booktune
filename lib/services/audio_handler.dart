@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/audiobook.dart';
 import '../models/librivox_book.dart';
 import 'logging_service.dart';
@@ -17,6 +18,9 @@ class BookTuneAudioHandler extends BaseAudioHandler
   String? _currentAmbientUrl;
   double _audiobookVolume = 1.0;
   double _ambientVolume = 0.3;
+
+  // Gestion du WakeLock pour appareils Honor/Huawei
+  bool _isWakeLockEnabled = false;
 
   BookTuneAudioHandler() {
     _init();
@@ -86,18 +90,27 @@ class BookTuneAudioHandler extends BaseAudioHandler
   Future<void> play() async {
     LoggingService.d('Commande: Play');
     await _player.play();
+
+    // Activer WakeLock pour appareils Honor/Huawei
+    await _enableWakeLockForHonorDevices();
   }
 
   @override
   Future<void> pause() async {
     LoggingService.d('Commande: Pause');
     await _player.pause();
+
+    // Désactiver WakeLock quand en pause
+    await _disableWakeLock();
   }
 
   @override
   Future<void> stop() async {
     LoggingService.d('Commande: Stop');
     await _player.stop();
+
+    // Désactiver WakeLock à l'arrêt
+    await _disableWakeLock();
     await super.stop();
   }
 
@@ -207,6 +220,38 @@ class BookTuneAudioHandler extends BaseAudioHandler
     _ambientVolume = volume;
     LoggingService.d('Volume ambiance: ${volume.toStringAsFixed(2)}');
     // TODO: Appliquer le volume au lecteur ambiance
+  }
+
+  // === GESTION WAKELOCK POUR HONOR/HUAWEI ===
+
+  /// Active le WakeLock pour les appareils Honor/Huawei
+  Future<void> _enableWakeLockForHonorDevices() async {
+    try {
+      // Vérifier si le WakeLock est déjà activé
+      if (_isWakeLockEnabled) return;
+
+      // Activer le WakeLock pour maintenir l'écran éveillé pendant la lecture
+      await WakelockPlus.enable();
+
+      _isWakeLockEnabled = true;
+      LoggingService.i('🔋 WakeLock activé pour appareils Honor/Huawei');
+    } catch (e) {
+      LoggingService.e('Erreur activation WakeLock', e);
+    }
+  }
+
+  /// Désactive le WakeLock
+  Future<void> _disableWakeLock() async {
+    try {
+      if (!_isWakeLockEnabled) return;
+
+      await WakelockPlus.disable();
+      _isWakeLockEnabled = false;
+
+      LoggingService.i('🔋 WakeLock désactivé');
+    } catch (e) {
+      LoggingService.e('Erreur désactivation WakeLock', e);
+    }
   }
 
   // === GETTERS POUR L'UI ===
