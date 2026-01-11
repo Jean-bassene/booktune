@@ -39,10 +39,30 @@ class AudiobookProvider with ChangeNotifier {
   Future<void> loadAmbientMusic() async {
     try {
       _ambientMusic = await _db.getAllAmbientMusic();
-      await _initializePresets();
+
+      // Si la BDD est vide ou corrompue, forcer l'initialisation des presets
+      if (_ambientMusic.isEmpty) {
+        await _initializePresets();
+        // Recharger après initialisation
+        _ambientMusic = await _db.getAllAmbientMusic();
+      } else {
+        // Vérifier que tous les presets sont présents
+        await _initializePresets();
+      }
+
       notifyListeners();
     } catch (e) {
-      LoggingService.e('Erreur chargement musiques', e);
+      LoggingService.e('Erreur chargement musiques - mode secours activé', e);
+
+      // MODE DE SECOURS : charger directement les presets si BDD cassée
+      try {
+        _ambientMusic = AmbientPresetsService.getPresetAmbients();
+        LoggingService.i(
+            'Mode secours ambiances activé: ${_ambientMusic.length} musiques chargées');
+        notifyListeners();
+      } catch (fallbackError) {
+        LoggingService.e('Erreur mode secours ambiances', fallbackError);
+      }
     }
   }
 
