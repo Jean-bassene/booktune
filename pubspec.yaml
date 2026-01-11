@@ -12,6 +12,7 @@ dependencies:
   
   # Audio
   just_audio: ^0.9.42
+  audio_service: ^0.18.12
 
   # Notifications modernes et fiables
   flutter_local_notifications: ^17.2.2

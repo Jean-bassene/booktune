@@ -1,12 +1,14 @@
 import 'package:booktune/services/librivox_service.dart';
 import 'package:booktune/services/media_notification_service.dart';
 import 'package:booktune/services/android_permissions_service.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'providers/audiobook_provider.dart';
 import 'providers/player_provider.dart';
+import 'services/audio_handler.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
