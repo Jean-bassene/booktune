@@ -27,6 +27,14 @@ class AndroidPermissionsService {
         results['mediaLibrary'] = true;
       }
 
+      // Permission d'accès aux fichiers audio (Android 13+)
+      if (await Permission.audio.isGranted == false) {
+        final audioStatus = await Permission.audio.request();
+        results['audio'] = audioStatus.isGranted;
+      } else {
+        results['audio'] = true;
+      }
+
       // Permission d'accès aux fichiers (Android 13+)
       if (await Permission.manageExternalStorage.isGranted == false) {
         final manageStorageStatus =

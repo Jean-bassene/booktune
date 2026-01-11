@@ -162,6 +162,11 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
             'Accès à la bibliothèque musicale',
             _permissionsStatus['mediaLibrary'] ?? false,
           ),
+          _buildPermissionItem(
+            'Musique et fichiers audio',
+            'Accès aux fichiers audio locaux',
+            _permissionsStatus['audio'] ?? false,
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _checkPermissionsAndOptimizations,
