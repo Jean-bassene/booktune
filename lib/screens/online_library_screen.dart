@@ -255,9 +255,9 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         children: [
-          // Barre de recherche
+          // Barre de recherche (hauteur réduite)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
@@ -273,15 +273,16 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                 onTap: () {}, // Effet tactile sans action
                 child: TextField(
                   controller: _searchController,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: 'Rechercher auteur, titre...',
-                    hintStyle: TextStyle(color: Colors.white54),
-                    prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                    hintStyle: TextStyle(color: Colors.white54, fontSize: 14),
+                    prefixIcon: const Icon(Icons.search,
+                        color: Colors.white54, size: 20),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon:
-                                const Icon(Icons.clear, color: Colors.white54),
+                            icon: const Icon(Icons.clear,
+                                color: Colors.white54, size: 20),
                             onPressed: () {
                               _searchController.clear();
                               _fetchRecentBooks();
@@ -290,6 +291,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                         : null,
                     filled: false,
                     border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
                   ),
                   onSubmitted: (_) => _performSearch(),
                 ),
