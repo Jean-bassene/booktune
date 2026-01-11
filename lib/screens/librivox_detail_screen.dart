@@ -187,14 +187,30 @@ class _LibrivoxDetailScreenState extends State<LibrivoxDetailScreen> {
           children: [
             // Bouton Jouer
             Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _playBook(),
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Jouer le livre'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade500, Colors.cyan.shade500],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade500.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: () => _playBook(),
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Jouer le livre'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
                 ),
               ),
             ),

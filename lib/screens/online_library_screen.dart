@@ -411,7 +411,17 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(16),
-                    onTap: () => _playBook(book),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LibrivoxDetailScreen(
+                            bookId: book.id,
+                            bookTitle: book.title,
+                          ),
+                        ),
+                      );
+                    },
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Row(
