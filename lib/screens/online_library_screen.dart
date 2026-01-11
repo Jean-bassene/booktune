@@ -215,16 +215,11 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       child: SafeArea(
         child: Column(
           children: [
-            // Header avec titre
+            // Header avec titre (sans flèche retour)
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
-                  const SizedBox(width: 16),
                   const Expanded(
                     child: Text(
                       'Explorer LibriVox',
