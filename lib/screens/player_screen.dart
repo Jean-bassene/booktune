@@ -6,6 +6,14 @@ import '../widgets/volume_slider.dart';
 import 'fullscreen_player_screen.dart';
 import 'ambient_presets_screen.dart';
 
+// Définition du thème glacé
+const Color _primaryText = Colors.white;
+const Color _secondaryText = Colors.white70;
+const Color _tertiaryText = Colors.white54;
+const Color _cardBackground = Color.fromRGBO(255, 255, 255, 0.05);
+const Color _cardBorder = Color.fromRGBO(255, 255, 255, 0.1);
+const Color _accentColor = Color.fromRGBO(156, 39, 176, 1); // purple.shade400
+
 class PlayerScreen extends StatelessWidget {
   const PlayerScreen({super.key});
 
@@ -92,8 +100,7 @@ class PlayerScreen extends StatelessWidget {
                             SizedBox(height: sectionSpacing),
                             _buildPlaybackControls(player, isSmallScreen),
                             SizedBox(height: sectionSpacing),
-                            _buildAmbientSelector(context,
-                                player), // ← Déplacé juste après les contrôles
+                            _buildAmbientSelector(context, player),
                             SizedBox(height: sectionSpacing),
                             _buildPlaybackSpeed(player),
                             SizedBox(height: elementSpacing),
@@ -412,206 +419,6 @@ class PlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaybackSpeed(PlayerProvider player) {
-    final speeds = [1.0, 1.25, 1.5, 2.0];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.speed, color: Colors.blue, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Vitesse de lecture',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            children: speeds.map((speed) {
-              final isSelected = (player.playbackSpeed - speed).abs() < 0.01;
-              return GestureDetector(
-                onTap: () => player.setPlaybackSpeed(speed),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    gradient: isSelected
-                        ? LinearGradient(
-                            colors: [
-                              Colors.purple.shade500,
-                              Colors.pink.shade500,
-                            ],
-                          )
-                        : null,
-                    color: isSelected ? null : Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.white.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Text(
-                    '${speed}x',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSleepTimer(BuildContext context, PlayerProvider player) {
-    final timers = [5, 10, 15, 30, 60];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.timer, color: Colors.orange, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Minuteur de sommeil',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              if (player.hasSleepTimer)
-                TextButton(
-                  onPressed: player.cancelSleepTimer,
-                  child: const Text(
-                    'Annuler',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-            ],
-          ),
-          if (player.hasSleepTimer) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Arrêt dans ${player.sleepTimerMinutes} min',
-              style: const TextStyle(color: Colors.orange, fontSize: 12),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            children: timers.map((minutes) {
-              final isSelected = player.sleepTimerMinutes == minutes;
-              return GestureDetector(
-                onTap: () => player.setSleepTimer(minutes),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: isSelected
-                        ? LinearGradient(
-                            colors: [
-                              Colors.orange.shade500,
-                              Colors.deepOrange.shade500,
-                            ],
-                          )
-                        : null,
-                    color: isSelected ? null : Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? Colors.transparent
-                          : Colors.white.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Text(
-                    '${minutes}m',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVolumeControls(PlayerProvider player) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
-      ),
-      child: Column(
-        children: [
-          VolumeSlider(
-            label: 'Livre audio',
-            icon: Icons.book,
-            color: Colors.purple.shade400,
-            value: player.audiobookVolume,
-            onChanged: player.setAudiobookVolume,
-          ),
-          const SizedBox(height: 16),
-          VolumeSlider(
-            label: 'Musique d\'ambiance',
-            icon: Icons.music_note,
-            color: Colors.pink.shade400,
-            value: player.ambientVolume,
-            onChanged: player.setAmbientVolume,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildAmbientSelector(BuildContext context, PlayerProvider player) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,14 +426,15 @@ class PlayerScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.music_note, color: Colors.blue, size: 20),
-                SizedBox(width: 8),
+                Icon(Icons.music_note,
+                    color: Color.fromRGBO(33, 150, 243, 1), size: 20),
+                const SizedBox(width: 8),
                 Text(
                   'Ambiance',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: _primaryText,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
@@ -647,7 +455,7 @@ class PlayerScreen extends StatelessWidget {
                   icon: const Icon(Icons.library_music, size: 16),
                   label: const Text('Presets'),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.blue.shade300,
+                    foregroundColor: Color.fromRGBO(33, 150, 243, 1),
                   ),
                 ),
                 if (player.currentAmbientMusic != null)
@@ -668,7 +476,40 @@ class PlayerScreen extends StatelessWidget {
             final ambientList = audiobookProvider.ambientMusic;
 
             if (ambientList.isEmpty) {
-              return _buildNoAmbientMusic(context);
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _cardBorder,
+                    width: 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {}, // Effet tactile sans action
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline,
+                            color: _tertiaryText, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Aucune musique d\'ambiance importée',
+                            style: TextStyle(
+                              color: _tertiaryText,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
             }
 
             return Wrap(
@@ -676,12 +517,8 @@ class PlayerScreen extends StatelessWidget {
               runSpacing: 8,
               children: ambientList.map((music) {
                 final isSelected = player.currentAmbientMusic?.id == music.id;
-                return _buildAmbientChip(
-                  context,
-                  music.name,
-                  music.id ?? 0, // Protection null
-                  isSelected,
-                  () async {
+                return GestureDetector(
+                  onTap: () async {
                     print(
                         '🔥 Clic sur ambiance: ${music.name} (${music.filePath})');
                     try {
@@ -703,7 +540,36 @@ class PlayerScreen extends StatelessWidget {
                       }
                     }
                   },
-                  audiobookProvider,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? LinearGradient(
+                              colors: [
+                                _accentColor,
+                                Color.fromRGBO(233, 30, 99, 1)
+                              ],
+                            )
+                          : null,
+                      color: isSelected ? null : Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.transparent
+                            : Colors.white.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Text(
+                      music.name,
+                      style: TextStyle(
+                        color: _primaryText,
+                        fontSize: 14,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                  ),
                 );
               }).toList(),
             );
@@ -713,94 +579,231 @@ class PlayerScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNoAmbientMusic(BuildContext context) {
+  Widget _buildPlaybackSpeed(PlayerProvider player) {
+    final speeds = [1.0, 1.25, 1.5, 2.0];
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
+        color: _cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _cardBorder,
+          width: 1,
+        ),
       ),
-      child: const Row(
-        children: [
-          Icon(Icons.info_outline, color: Colors.white54, size: 20),
-          SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Aucune musique d\'ambiance importée',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 14,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {}, // Effet tactile sans action
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.speed, color: _accentColor, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Vitesse de lecture',
+                    style: TextStyle(
+                      color: _primaryText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: speeds.map((speed) {
+                  final isSelected =
+                      (player.playbackSpeed - speed).abs() < 0.01;
+                  return GestureDetector(
+                    onTap: () => player.setPlaybackSpeed(speed),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? LinearGradient(
+                                colors: [
+                                  _accentColor,
+                                  Color.fromRGBO(233, 30, 99, 1),
+                                ],
+                              )
+                            : null,
+                        color:
+                            isSelected ? null : Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.transparent
+                              : Colors.white.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Text(
+                        '${speed}x',
+                        style: TextStyle(
+                          color: _primaryText,
+                          fontSize: 14,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildAmbientChip(
-    BuildContext context,
-    String label,
-    int musicId,
-    bool isSelected,
-    VoidCallback onTap,
-    AudiobookProvider audiobookProvider,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: () {
-        _showDeleteAmbientDialog(context, label, musicId, audiobookProvider);
-      },
-      child: Stack(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: isSelected
-                  ? LinearGradient(
-                      colors: [Colors.purple.shade500, Colors.pink.shade500],
-                    )
-                  : null,
-              color: isSelected ? null : Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected
-                    ? Colors.transparent
-                    : Colors.white.withOpacity(0.2),
+  Widget _buildSleepTimer(BuildContext context, PlayerProvider player) {
+    final timers = [5, 10, 15, 30, 60];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _cardBorder,
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {}, // Effet tactile sans action
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.timer,
+                          color: Color.fromRGBO(255, 152, 0, 1), size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Minuteur de sommeil',
+                        style: TextStyle(
+                          color: _primaryText,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (player.hasSleepTimer)
+                    TextButton(
+                      onPressed: player.cancelSleepTimer,
+                      child: const Text(
+                        'Annuler',
+                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ),
+                ],
               ),
-            ),
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ),
-          Positioned(
-            top: -6,
-            right: -6,
-            child: GestureDetector(
-              onTap: () {
-                _showDeleteAmbientDialog(
-                    context, label, musicId, audiobookProvider);
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.red.shade500,
-                  shape: BoxShape.circle,
+              if (player.hasSleepTimer) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Arrêt dans ${player.sleepTimerMinutes} min',
+                  style: const TextStyle(
+                      color: Color.fromRGBO(255, 152, 0, 1), fontSize: 12),
                 ),
-                padding: const EdgeInsets.all(4),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 12,
-                ),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: timers.map((minutes) {
+                  final isSelected = player.sleepTimerMinutes == minutes;
+                  return GestureDetector(
+                    onTap: () => player.setSleepTimer(minutes),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? LinearGradient(
+                                colors: [
+                                  Color.fromRGBO(255, 152, 0, 1),
+                                  Color.fromRGBO(255, 87, 34, 1),
+                                ],
+                              )
+                            : null,
+                        color:
+                            isSelected ? null : Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected
+                              ? Colors.transparent
+                              : Colors.white.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Text(
+                        '${minutes}m',
+                        style: TextStyle(
+                          color: _primaryText,
+                          fontSize: 13,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVolumeControls(PlayerProvider player) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _cardBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _cardBorder,
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {}, // Effet tactile sans action
+          child: Column(
+            children: [
+              VolumeSlider(
+                label: 'Livre audio',
+                icon: Icons.book,
+                color: _accentColor,
+                value: player.audiobookVolume,
+                onChanged: player.setAudiobookVolume,
+              ),
+              const SizedBox(height: 16),
+              VolumeSlider(
+                label: 'Musique d\'ambiance',
+                icon: Icons.music_note,
+                color: Color.fromRGBO(233, 30, 99, 1),
+                value: player.ambientVolume,
+                onChanged: player.setAmbientVolume,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

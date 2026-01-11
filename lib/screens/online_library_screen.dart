@@ -200,25 +200,47 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('LibriVox Library'),
-        backgroundColor: Colors.blue.shade900,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.blue.shade900,
-              Colors.blue.shade800,
-            ],
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.deepPurple.shade900,
+            Colors.blue.shade900,
+            Colors.indigo.shade900,
+          ],
         ),
+      ),
+      child: SafeArea(
         child: Column(
           children: [
+            // Header avec titre
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      'Explorer LibriVox',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Zone de recherche
             _buildSearchUI(),
+            // Liste des résultats
             Expanded(
               child: _buildResultsList(),
             ),
@@ -230,48 +252,71 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
 
   Widget _buildSearchUI() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         children: [
-          TextField(
-            controller: _searchController,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'recherche auteur...',
-              hintStyle: TextStyle(color: Colors.white54),
-              prefixIcon: const Icon(Icons.search, color: Colors.white54),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.clear, color: Colors.white54),
-                onPressed: () {
-                  _searchController.clear();
-                  _fetchRecentBooks();
-                },
-              ),
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+          // Barre de recherche
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
               ),
             ),
-            onSubmitted: (_) => _performSearch(),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {}, // Effet tactile sans action
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Rechercher auteur, titre...',
+                    hintStyle: TextStyle(color: Colors.white54),
+                    prefixIcon: const Icon(Icons.search, color: Colors.white54),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon:
+                                const Icon(Icons.clear, color: Colors.white54),
+                            onPressed: () {
+                              _searchController.clear();
+                              _fetchRecentBooks();
+                            },
+                          )
+                        : null,
+                    filled: false,
+                    border: InputBorder.none,
+                  ),
+                  onSubmitted: (_) => _performSearch(),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 12),
+          // Filtre langue
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Language:', style: TextStyle(color: Colors.white70)),
+              const Text('Langue:', style: TextStyle(color: Colors.white70)),
               const SizedBox(width: 10),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: DropdownButton<String>(
                   value: _selectedLanguage ?? 'All',
-                  dropdownColor: Colors.blue.shade800,
+                  dropdownColor: Colors.grey.shade900,
                   style: const TextStyle(color: Colors.white),
                   underline: const SizedBox(),
                   icon:
@@ -301,18 +346,35 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
 
   Widget _buildResultsList() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.white),
+      );
     }
 
     if (_books.isEmpty) {
       return Center(
-        child: Text(
-          _isSearch
-              ? 'No results found.'
-              : _selectedLanguage != null
-                  ? 'No books found in this language.'
-                  : 'Could not load recent books.',
-          style: const TextStyle(color: Colors.white70, fontSize: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 80,
+              color: Colors.white.withOpacity(0.3),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              _isSearch
+                  ? 'Aucun résultat trouvé'
+                  : _selectedLanguage != null
+                      ? 'Aucun livre dans cette langue'
+                      : 'Impossible de charger les livres récents',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -321,68 +383,129 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Text(
-            _isSearch ? 'Search Results' : 'Recently Added',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(color: Colors.white),
+            _isSearch ? 'Résultats de recherche' : 'Ajoutés récemment',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         Expanded(
           child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             itemCount: _books.length,
             itemBuilder: (context, index) {
               final book = _books[index];
-              return Card(
-                color: Colors.white.withOpacity(0.1),
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  leading: book.coverUrl != null
-                      ? Image.network(
-                          book.coverUrl!,
-                          width: 50,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.book, color: Colors.white),
-                        )
-                      : const Icon(Icons.book, color: Colors.white),
-                  title: Text(book.title,
-                      style: const TextStyle(color: Colors.white)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(book.author,
-                          style: const TextStyle(color: Colors.white70)),
-                      const SizedBox(height: 2),
-                      Row(
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => _playBook(book),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
                         children: [
+                          // Image de couverture
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
+                            width: 60,
+                            height: 60,
                             decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.white.withOpacity(0.1),
                             ),
-                            child: Text(
-                              book.language ?? 'Unknown',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 11),
+                            child: book.coverUrl != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      book.coverUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(Icons.book,
+                                                  color: Colors.white54),
+                                    ),
+                                  )
+                                : const Icon(Icons.book, color: Colors.white54),
+                          ),
+                          const SizedBox(width: 16),
+                          // Informations du livre
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  book.title,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  book.author,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+                                // Badge langue
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.blue.shade500,
+                                        Colors.cyan.shade500,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    book.language ?? 'Inconnue',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          // Indicateur de lecture
+                          if (_playingBook == book)
+                            const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                  onTap: () => _playBook(book),
-                  trailing: _playingBook == book
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : null,
                 ),
               );
             },
