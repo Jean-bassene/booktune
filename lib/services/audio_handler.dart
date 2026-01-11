@@ -127,7 +127,9 @@ class BookTuneAudioHandler extends BaseAudioHandler
       title: chapterTitle ?? audiobook.title,
       artist: audiobook.author,
       album: audiobook.title,
-      duration: audiobook.duration,
+      duration: audiobook.duration != null
+          ? Duration(seconds: audiobook.duration!)
+          : null,
       artUri: null, // TODO: Ajouter couverture
     );
 
