@@ -1,5 +1,7 @@
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/material.dart';
 
 class AndroidPermissionsService {
   static const platform = MethodChannel('com.example.booktune/battery');
@@ -114,5 +116,88 @@ Ces paramètres garantissent que :
 • La lecture continue même en mode économie d'énergie
 • Les contrôles de notification sont toujours disponibles
 ''';
+  }
+
+  /// Vérifie si l'appareil est Android et si c'est une version qui nécessite l'optimisation batterie
+  static Future<bool> shouldShowBatteryOptimizationDialog() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      final androidInfo = await deviceInfo.androidInfo;
+
+      // Android 6.0 (API 23) et supérieur nécessitent souvent cette configuration
+      return androidInfo.version.sdkInt >= 23;
+    } catch (e) {
+      print('Erreur vérification version Android: $e');
+      return true; // Par défaut, montrer le dialogue
+    }
+  }
+
+  /// Ouvre les paramètres de batterie directement
+  static Future<void> openBatteryOptimizationSettings() async {
+    try {
+      await platform.invokeMethod('openBatteryOptimizationSettings');
+    } on PlatformException catch (e) {
+      print('Erreur ouverture paramètres batterie: ${e.message}');
+      // Fallback: ouvrir les paramètres de l'app
+      await openAppSettings();
+    }
+  }
+
+  /// Affiche un dialogue d'avertissement pour l'optimisation batterie
+  static Future<void> showBatteryOptimizationDialog(
+      BuildContext context) async {
+    final shouldShow = await shouldShowBatteryOptimizationDialog();
+    if (!shouldShow) return;
+
+    final isExempted = await checkBatteryOptimizationExemption();
+    if (isExempted) return; // Déjà exempté
+
+    if (!context.mounted) return;
+
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          title: Row(
+            children: [
+              Icon(Icons.battery_alert, color: Colors.orange.shade400),
+              const SizedBox(width: 8),
+              const Text(
+                'Optimisation Batterie',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Pour une lecture audio continue, Booktune doit être exempté des optimisations de batterie Android.\n\n'
+            'Cela permet à l\'app de fonctionner en arrière-plan sans interruption.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Plus tard',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await openBatteryOptimizationSettings();
+              },
+              icon: const Icon(Icons.settings),
+              label: const Text('Configurer'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
