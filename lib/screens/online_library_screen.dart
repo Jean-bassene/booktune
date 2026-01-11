@@ -255,12 +255,12 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         children: [
-          // Barre de recherche (hauteur réduite)
+          // Barre de recherche (épaisseur réduite)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: Colors.white.withOpacity(0.1),
                 width: 1,
@@ -269,7 +269,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 onTap: () {}, // Effet tactile sans action
                 child: TextField(
                   controller: _searchController,
@@ -278,11 +278,11 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                     hintText: 'Rechercher auteur, titre...',
                     hintStyle: TextStyle(color: Colors.white54, fontSize: 14),
                     prefixIcon: const Icon(Icons.search,
-                        color: Colors.white54, size: 20),
+                        color: Colors.white54, size: 18),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear,
-                                color: Colors.white54, size: 20),
+                                color: Colors.white54, size: 18),
                             onPressed: () {
                               _searchController.clear();
                               _fetchRecentBooks();
@@ -292,6 +292,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                     filled: false,
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
+                    isDense: true, // Réduit encore la hauteur
                   ),
                   onSubmitted: (_) => _performSearch(),
                 ),
@@ -307,7 +308,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
               const SizedBox(width: 10),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
