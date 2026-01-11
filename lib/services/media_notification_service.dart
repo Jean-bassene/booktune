@@ -29,6 +29,7 @@ class NotificationService {
         iOS: iosSettings,
       ),
       onDidReceiveNotificationResponse: _handleNotificationTap,
+      onDidReceiveBackgroundNotificationResponse: _handleNotificationAction,
     );
 
     // Créer les canaux de notification
@@ -171,22 +172,44 @@ class NotificationService {
   }
 
   static void _handleNotificationTap(NotificationResponse response) async {
-    final actionId = response.actionId;
+    // Gestion du tap sur la notification (ouvre l'app)
+    // response.actionId sera null pour un tap simple
+    print('Notification tap: ${response.actionId}');
+  }
 
-    switch (actionId) {
-      case 'play':
-        await _playerProvider?.togglePlayPause();
-        break;
-      case 'pause':
-        await _playerProvider?.togglePlayPause();
-        break;
-      case 'next':
-        await _playerProvider?.playNextChapter();
-        break;
-      case 'stop':
-        await _playerProvider?.togglePlayPause();
-        await hidePlaybackNotification();
-        break;
+  static void _handleNotificationAction(NotificationResponse response) async {
+    final actionId = response.actionId;
+    print('🔥 Notification action triggered: $actionId');
+
+    if (_playerProvider == null) {
+      print('❌ PlayerProvider not set for notification actions');
+      return;
+    }
+
+    try {
+      switch (actionId) {
+        case 'play':
+          print('▶️ Action: Play');
+          await _playerProvider?.togglePlayPause();
+          break;
+        case 'pause':
+          print('⏸️ Action: Pause');
+          await _playerProvider?.togglePlayPause();
+          break;
+        case 'next':
+          print('⏭️ Action: Next chapter');
+          await _playerProvider?.playNextChapter();
+          break;
+        case 'stop':
+          print('⏹️ Action: Stop');
+          await _playerProvider?.togglePlayPause();
+          await hidePlaybackNotification();
+          break;
+        default:
+          print('❓ Unknown action: $actionId');
+      }
+    } catch (e) {
+      print('❌ Error handling notification action: $e');
     }
   }
 
