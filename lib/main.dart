@@ -71,6 +71,11 @@ class MyApp extends StatelessWidget {
           NotificationService.setPlayerProvider(playerProvider);
           NotificationService.initialize();
 
+          // Afficher le dialogue d'optimisation batterie si nécessaire
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            AndroidPermissionsService.showBatteryOptimizationDialog(context);
+          });
+
           return MaterialApp(
             title: 'Booktune',
             debugShowCheckedModeBanner: false,
