@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import 'providers/audiobook_provider.dart';
 import 'providers/player_provider.dart';
 import 'services/audio_handler.dart';
+import 'services/media_conflict_resolver.dart';
+import 'services/download_service.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
@@ -57,6 +59,9 @@ class MyApp extends StatelessWidget {
         ProxyProvider<http.Client, LibrivoxService>(
           update: (context, client, __) => LibrivoxService(httpClient: client),
         ),
+        Provider<DownloadService>(
+          create: (_) => DownloadService(),
+        ),
         ChangeNotifierProvider(create: (_) => AudiobookProvider()),
         ChangeNotifierProvider(create: (_) => PlayerProvider()),
       ],
@@ -70,6 +75,9 @@ class MyApp extends StatelessWidget {
           // Initialiser les notifications modernes
           NotificationService.setPlayerProvider(playerProvider);
           NotificationService.initialize();
+
+          // Initialiser la gestion des conflits média
+          MediaConflictResolver.initialize();
 
           // Afficher le dialogue d'optimisation batterie si nécessaire
           WidgetsBinding.instance.addPostFrameCallback((_) {
