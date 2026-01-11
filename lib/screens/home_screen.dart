@@ -27,25 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
 
-    // Charger les données immédiatement au démarrage
-    _loadInitialData();
-  }
-
-  Future<void> _loadInitialData() async {
-    print('🏠 HomeScreen: Chargement des données au démarrage...');
-
-    final provider = context.read<AudiobookProvider>();
-    await provider.loadAudiobooks();
-    await provider.loadAmbientMusic();
-
-    // Vérifier que les données sont chargées
-    print('🏠 HomeScreen: ${provider.audiobooks.length} livres chargés');
-    print('🏠 HomeScreen: ${provider.ambientMusic.length} musiques chargées');
-
-    // Forcer une mise à jour de l'interface
-    if (mounted) {
-      setState(() {});
-    }
+    // Le chargement des données se fait maintenant dans LibraryScreen uniquement
+    // pour éviter les conflits de setState during build
   }
 
   @override
