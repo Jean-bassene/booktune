@@ -17,14 +17,21 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
+        <!-- Déclare que c'est une app audio/musique -->
+        <meta-data
+            android:name="android.media.browsable"
+            android:value="true" />
+
         <!-- Service de lecture audio en arrière-plan -->
         <service
             android:name="com.ryanheise.audioservice.AudioService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback">
+            <!-- Intent filter pour Android Auto et assistants -->
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService" />
                 <action android:name="androidx.media3.session.MediaButtonReceiver" />
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
 
