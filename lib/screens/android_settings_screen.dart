@@ -167,6 +167,11 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
             'Accès aux fichiers audio locaux',
             _permissionsStatus['audio'] ?? false,
           ),
+          _buildPermissionItem(
+            'Superposition aux autres apps',
+            'Affichage de contrôles flottants',
+            _permissionsStatus['systemAlertWindow'] ?? false,
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _checkPermissionsAndOptimizations,

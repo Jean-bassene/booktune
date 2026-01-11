@@ -43,6 +43,14 @@ class AndroidPermissionsService {
       } else {
         results['manageExternalStorage'] = true;
       }
+
+      // Permission de superposition (overlay)
+      try {
+        results['systemAlertWindow'] =
+            await Permission.systemAlertWindow.isGranted;
+      } catch (e) {
+        results['systemAlertWindow'] = false;
+      }
     } catch (e) {
       print('Erreur lors de la demande de permissions: $e');
       results['error'] = false;
