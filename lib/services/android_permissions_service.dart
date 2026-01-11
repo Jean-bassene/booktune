@@ -181,6 +181,17 @@ Ces paramètres garantissent que :
     }
   }
 
+  /// Ouvre les paramètres de lancement d'applications (pour Honor/Huawei)
+  static Future<void> openAppLaunchSettings() async {
+    try {
+      await platform.invokeMethod('openAppLaunchSettings');
+    } on PlatformException catch (e) {
+      print('Erreur ouverture paramètres lancement: ${e.message}');
+      // Fallback: ouvrir les paramètres de l'app
+      await openAppSettings();
+    }
+  }
+
   /// Affiche un dialogue d'avertissement pour l'optimisation batterie
   static Future<void> showBatteryOptimizationDialog(
       BuildContext context) async {
@@ -216,12 +227,14 @@ Ces paramètres garantissent que :
           ),
           content: Text(
             isHonor
-                ? 'Votre Honor X5 a des optimisations batterie très agressives. '
-                    'Pour éviter les coupures audio après 2-3 minutes :\n\n'
-                    '1. Désactivez "Optimisation batterie" pour Booktune\n'
-                    '2. Autorisez "Démarrage automatique"\n'
-                    '3. Activez "Verrouillage d\'app"\n\n'
-                    'Ces réglages sont essentiels pour Honor.'
+                ? 'Votre Honor X5 coupe automatiquement l\'audio après 2-3 minutes.\n\n'
+                    'Solution CRITIQUE :\n\n'
+                    '1. Paramètres > Applications > Booktune\n'
+                    '2. "Informations sur l\'app" > Paramètres\n'
+                    '3. Lancement d\'applications > Désactiver "Gérée automatiquement"\n'
+                    '4. Activer : Démarrage auto + Activité secondaire\n'
+                    '5. Paramètres > Batterie > "Pas de restriction"\n\n'
+                    '⚠️ Cette étape est ESSENTIELLE pour Honor !'
                 : 'Pour une lecture audio continue, Booktune doit être exempté des optimisations de batterie Android.\n\n'
                     'Cela permet à l\'app de fonctionner en arrière-plan sans interruption.',
             style: const TextStyle(color: Colors.white70),

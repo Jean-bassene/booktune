@@ -53,15 +53,18 @@ class ChineseOEMHelper {
     // Instructions spécifiques par marque
     if (manufacturer.contains('honor')) {
       return {
-        'title': 'Configuration Honor',
+        'title': 'Configuration Honor - Arrêt automatique résolu',
         'steps': [
-          '1. Paramètres > Batterie > Lancement d\'applications',
-          '2. Trouver cette app et la définir en "Gérer manuellement"',
-          '3. Activer : Démarrage auto, Activité secondaire, Exécution en arrière-plan',
-          '4. Paramètres > Applications > Cette app > Batterie',
-          '5. Sélectionner "Pas de restriction"',
+          '1. Paramètres > Applications > Cette app',
+          '2. Appuyez sur "Informations sur l\'app"',
+          '3. Paramètres > Lancement d\'applications',
+          '4. Désactiver "Gérée automatiquement"',
+          '5. Activer : Démarrage auto, Activité secondaire, Exécution en arrière-plan',
+          '6. Paramètres > Batterie',
+          '7. Sélectionner "Pas de restriction"',
         ],
         'critical': true,
+        'autoFix': true, // Peut être corrigé automatiquement
       };
     }
 

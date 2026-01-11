@@ -275,6 +275,36 @@ class _AndroidSettingsScreenState extends State<AndroidSettingsScreen> {
                 foregroundColor: Colors.white,
               ),
             ),
+            const SizedBox(height: 12),
+            // Bouton spécial pour Honor/Huawei
+            FutureBuilder<bool>(
+              future: AndroidPermissionsService.isHonorDevice(),
+              builder: (context, snapshot) {
+                if (snapshot.data == true) {
+                  return ElevatedButton.icon(
+                    onPressed: () async {
+                      await AndroidPermissionsService.openAppLaunchSettings();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Désactivez "Gérée automatiquement" pour éviter les coupures audio'),
+                            duration: Duration(seconds: 5),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.settings_applications),
+                    label: const Text('Paramètres lancement Honor'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
           ],
         ],
       ),
