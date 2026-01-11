@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import '../models/downloaded_book.dart';
 import '../models/librivox_book.dart';
 import 'logging_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Service de gestion des téléchargements de livres LibriVox
 class DownloadService {
@@ -20,9 +21,54 @@ class DownloadService {
   Stream<DownloadProgress> get downloadProgress =>
       _downloadProgressController.stream;
 
+  // Gestionnaire de notifications
+  static FlutterLocalNotificationsPlugin? _notificationsPlugin;
+  static const String _downloadChannelId = 'booktune_downloads';
+  static const String _downloadChannelName = 'Téléchargements BookTune';
+  static const String _downloadChannelDescription =
+      'Notifications de progression des téléchargements';
+
+  // IDs de notifications pour éviter les conflits
+  static const int _baseNotificationId = 1000;
+
   /// Initialise le service
   Future<void> initialize() async {
+    await _initializeNotifications();
     LoggingService.i('DownloadService initialisé');
+  }
+
+  /// Initialise le système de notifications
+  Future<void> _initializeNotifications() async {
+    _notificationsPlugin = FlutterLocalNotificationsPlugin();
+
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings();
+
+    const initializationSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    await _notificationsPlugin!.initialize(initializationSettings);
+
+    // Créer le canal de notifications pour les téléchargements
+    const androidChannel = AndroidNotificationChannel(
+      _downloadChannelId,
+      _downloadChannelName,
+      description: _downloadChannelDescription,
+      importance: Importance.low,
+      showBadge: false,
+      enableVibration: false,
+      playSound: false,
+    );
+
+    await _notificationsPlugin!
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidChannel);
+
+    LoggingService.i('Notifications de téléchargement initialisées');
   }
 
   /// Télécharge un livre LibriVox complet avec tous ses chapitres
@@ -230,6 +276,110 @@ class DownloadService {
   void _notifyProgress(DownloadProgress progress) {
     if (!_downloadProgressController.isClosed) {
       _downloadProgressController.add(progress);
+    }
+
+    // Afficher la notification de progression
+    _showDownloadNotification(progress);
+  }
+
+  /// Affiche une notification de progression de téléchargement
+  Future<void> _showDownloadNotification(DownloadProgress progress) async {
+    if (_notificationsPlugin == null) return;
+
+    final notificationId = _baseNotificationId + progress.bookId.hashCode;
+
+    // Calculer la progression en pourcentage
+    final progressPercent = (progress.progress * 100).round();
+
+    // Déterminer le titre et le message selon l'état
+    String title;
+    String body;
+    bool showProgress = false;
+    int? maxProgress;
+    int? currentProgress;
+
+    switch (progress.status) {
+      case DownloadStatus.downloading:
+        title = 'Téléchargement en cours';
+        body = '${progressPercent}% - ${progress.chapterId.split('_').last}';
+        showProgress = true;
+        maxProgress = 100;
+        currentProgress = progressPercent;
+        break;
+
+      case DownloadStatus.completed:
+        title = 'Téléchargement terminé';
+        body = 'Chapitre téléchargé avec succès';
+        showProgress = false;
+        // Masquer la notification après 3 secondes
+        Future.delayed(const Duration(seconds: 3), () {
+          _notificationsPlugin?.cancel(notificationId);
+        });
+        break;
+
+      case DownloadStatus.failed:
+        title = 'Échec du téléchargement';
+        body = progress.errorMessage ?? 'Erreur inconnue';
+        showProgress = false;
+        // Masquer la notification après 5 secondes
+        Future.delayed(const Duration(seconds: 5), () {
+          _notificationsPlugin?.cancel(notificationId);
+        });
+        break;
+
+      default:
+        return; // Ne pas afficher pour les autres états
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      _downloadChannelId,
+      _downloadChannelName,
+      channelDescription: _downloadChannelDescription,
+      importance: Importance.low,
+      priority: Priority.low,
+      showProgress: showProgress,
+      maxProgress: maxProgress ?? 100,
+      progress: currentProgress ?? 0,
+      ongoing: progress.status == DownloadStatus.downloading,
+      autoCancel: false,
+      onlyAlertOnce: true,
+      showWhen: false,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: false,
+      presentBadge: false,
+      presentSound: false,
+    );
+
+    final notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _notificationsPlugin!.show(
+      notificationId,
+      title,
+      body,
+      notificationDetails,
+    );
+  }
+
+  /// Masque une notification de téléchargement
+  Future<void> hideDownloadNotification(String bookId) async {
+    if (_notificationsPlugin == null) return;
+
+    final notificationId = _baseNotificationId + bookId.hashCode;
+    await _notificationsPlugin!.cancel(notificationId);
+  }
+
+  /// Masque toutes les notifications de téléchargement
+  Future<void> hideAllDownloadNotifications() async {
+    if (_notificationsPlugin == null) return;
+
+    // Annuler toutes les notifications dans la plage des téléchargements
+    for (int i = 0; i < 100; i++) {
+      await _notificationsPlugin!.cancel(_baseNotificationId + i);
     }
   }
 
