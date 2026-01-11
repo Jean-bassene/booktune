@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/audiobook_provider.dart';
 import '../widgets/volume_slider.dart';
+import '../services/media_conflict_resolver.dart';
 import 'fullscreen_player_screen.dart';
 import 'ambient_presets_screen.dart';
 
@@ -99,6 +100,8 @@ class PlayerScreen extends StatelessWidget {
                             _buildProgressBar(player),
                             SizedBox(height: sectionSpacing),
                             _buildPlaybackControls(player, isSmallScreen),
+                            SizedBox(height: sectionSpacing),
+                            _buildMediaConflictIndicator(context),
                             SizedBox(height: sectionSpacing),
                             _buildVolumeControls(player),
                             SizedBox(height: sectionSpacing),
@@ -765,6 +768,79 @@ class PlayerScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMediaConflictIndicator(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: Stream.periodic(const Duration(seconds: 2))
+          .map((_) => MediaConflictResolver.hasConflict),
+      builder: (context, snapshot) {
+        final hasConflict = snapshot.data ?? false;
+
+        if (!hasConflict) {
+          return const SizedBox.shrink(); // Rien à afficher
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade900.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.orange.shade400,
+              width: 2,
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () =>
+                  MediaConflictResolver.showConflictResolutionDialog(context),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning,
+                    color: Colors.orange.shade300,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Conflit avec autre app musicale',
+                          style: TextStyle(
+                            color: Colors.orange.shade100,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Appuyez pour résoudre le conflit',
+                          style: TextStyle(
+                            color: Colors.orange.shade200,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.orange.shade300,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
