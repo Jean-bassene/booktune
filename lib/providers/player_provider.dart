@@ -484,50 +484,6 @@ class PlayerProvider with ChangeNotifier {
     }
   }
 
-  /// Trouve le dernier chapitre écouté et la position dans ce chapitre
-  Map<String, dynamic> _findLastListenedChapterWithPosition(
-      DownloadedBook book) {
-    try {
-      // Chercher le chapitre avec le plus de secondes écoutées
-      DownloadedChapter? lastChapter;
-      int maxListenedSeconds = 0;
-
-      for (final chapter in book.chapters) {
-        if (chapter.listenedSeconds > maxListenedSeconds) {
-          maxListenedSeconds = chapter.listenedSeconds;
-          lastChapter = chapter;
-        }
-      }
-
-      if (lastChapter != null && maxListenedSeconds > 30) {
-        // Seulement reprendre si on a écouté plus de 30 secondes
-        final chapterIndex = book.chapters.indexOf(lastChapter);
-        final resumePosition = Duration(seconds: maxListenedSeconds);
-
-        LoggingService.i(
-            'Reprise lecture chapitre ${chapterIndex + 1} à ${maxListenedSeconds}s');
-
-        return {
-          'chapterIndex': chapterIndex,
-          'position': resumePosition,
-        };
-      } else {
-        LoggingService.i(
-            'Début lecture depuis chapitre 1 (pas de progression trouvée)');
-        return {
-          'chapterIndex': 0,
-          'position': Duration.zero,
-        };
-      }
-    } catch (e) {
-      LoggingService.w('Erreur recherche dernier chapitre écouté: $e');
-      return {
-        'chapterIndex': 0,
-        'position': Duration.zero,
-      };
-    }
-  }
-
   /// Charge et joue un livre téléchargé depuis LibriVox
   /// Utilise getBookDetails() avec extraction RSS améliorée
   Future<void> loadAndPlayDownloadedBook(DownloadedBook book) async {
@@ -599,12 +555,9 @@ class PlayerProvider with ChangeNotifier {
 
     _currentLibrivoxBook = bookToPlay;
 
-    // Reprendre depuis le dernier chapitre écouté ou commencer par le premier
-    final resumeInfo = _findLastListenedChapterWithPosition(book);
-    _currentLibrivoxChapterIndex = resumeInfo['chapterIndex'];
-    final resumePosition = resumeInfo['position'];
-
-    await _loadAndPlayLibrivoxChapterAtIndex(resumePosition: resumePosition);
+    // Commencer toujours par le premier chapitre (reprise de lecture désactivée temporairement)
+    _currentLibrivoxChapterIndex = 0;
+    await _loadAndPlayLibrivoxChapterAtIndex();
   }
 
   @override
