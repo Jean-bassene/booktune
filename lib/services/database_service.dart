@@ -201,4 +201,12 @@ class DatabaseService {
     final db = await database;
     db.close();
   }
+
+  /// Réinitialise l'instance singleton (pour réparation DB)
+  static Future<void> resetInstance() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+  }
 }

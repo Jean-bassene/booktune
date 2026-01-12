@@ -92,6 +92,61 @@ class AudiobookProvider with ChangeNotifier {
       }
     } catch (e) {
       LoggingService.e('Erreur initialisation presets', e);
+
+      // Vérifier si c'est une erreur de DB corrompue
+      if (e.toString().contains('READONLY') ||
+          e.toString().contains('readonly')) {
+        LoggingService.w(
+            'Base de données corrompue détectée - tentative de réparation');
+
+        try {
+          // Essayer de réparer la DB automatiquement
+          await _repairDatabase();
+          LoggingService.i('Base de données réparée avec succès');
+
+          // Réessayer l'initialisation après réparation
+          final presets = AmbientPresetsService.getPresetAmbients();
+          for (final preset in presets) {
+            final exists =
+                _ambientMusic.any((music) => music.filePath == preset.filePath);
+            if (!exists) {
+              await _db.insertAmbientMusic(preset);
+              _ambientMusic.add(preset);
+            }
+          }
+          LoggingService.i('Presets réinitialisés après réparation DB');
+        } catch (repairError) {
+          LoggingService.e('Échec réparation DB automatique', repairError);
+          LoggingService.w(
+              'Mode secours : utilisation des presets en mémoire seulement');
+
+          // Mode secours : charger directement les presets sans DB
+          _ambientMusic.clear();
+          _ambientMusic.addAll(AmbientPresetsService.getPresetAmbients());
+        }
+      }
+    }
+  }
+
+  /// Répare automatiquement la base de données corrompue
+  Future<void> _repairDatabase() async {
+    try {
+      LoggingService.i('Réparation base de données...');
+
+      // Fermer toutes les connexions
+      await _db.close();
+
+      // Supprimer les fichiers DB corrompus (si possible)
+      // Note: Sur mobile, on ne peut pas supprimer directement les fichiers
+      // La DB sera recréée automatiquement à la prochaine ouverture
+
+      // Forcer la recréation en réinitialisant l'instance
+      await DatabaseService.resetInstance();
+
+      LoggingService.i('Base de données réparée');
+    } catch (e) {
+      LoggingService.e('Erreur réparation DB', e);
+      rethrow;
     }
   }
 
