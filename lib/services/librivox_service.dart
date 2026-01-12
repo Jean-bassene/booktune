@@ -378,16 +378,22 @@ class LibrivoxService {
 
       LoggingService.d('[getBookDetails] Auteur final choisi: "$author"');
 
-      // Extraire la langue depuis le RSS ou utiliser celle existante
+      // PRIORISER LA LANGUE RSS (comme pour l'auteur)
       final languageMatch =
           RegExp(r'<language><!\[CDATA\[(.*?)\]\]></language>')
               .firstMatch(xmlContent);
       final rssLanguage = languageMatch?.group(1);
-      final language = (existingBook != null &&
-              existingBook.language != null &&
-              existingBook.language!.isNotEmpty)
-          ? existingBook.language
-          : (rssLanguage ?? 'Langue inconnue');
+      LoggingService.d('[getBookDetails] Langue RSS: "$rssLanguage"');
+
+      final language = rssLanguage ?? // ← RSS en priorité
+          (existingBook != null &&
+                  existingBook.language != null &&
+                  existingBook.language!.isNotEmpty &&
+                  existingBook.language != 'Unknown'
+              ? existingBook.language
+              : 'Langue inconnue');
+
+      LoggingService.d('[getBookDetails] Langue finale: "$language"');
 
       final descMatch =
           RegExp(r'<description><!\[CDATA\[(.*?)\]\]></description>')
@@ -442,6 +448,9 @@ class LibrivoxService {
         Duration.zero,
         (sum, c) => sum + c.duration,
       );
+
+      LoggingService.d(
+          '[getBookDetails] Durée totale calculée: ${totalDuration.inMinutes}min ${totalDuration.inSeconds.remainder(60)}s');
 
       final book = LibrivoxBook(
         id: bookId,
