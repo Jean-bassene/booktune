@@ -315,6 +315,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                 onTap: () {}, // Effet tactile sans action
                 child: TextField(
                   controller: _searchController,
+                  textAlign: TextAlign.center, // Centrer le texte
                   style: const TextStyle(
                       color: Colors.white, fontSize: 13), // Police réduite
                   decoration: InputDecoration(
