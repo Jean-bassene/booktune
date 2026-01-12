@@ -349,10 +349,22 @@ class LibrivoxService {
           RegExp(r'<itunes:author><!\[CDATA\[(.*?)\]\]></itunes:author>')
               .firstMatch(xmlContent);
       final rssAuthor = authorMatch?.group(1);
-      final author =
-          (existingBook != null && existingBook.author != 'Unknown Author')
-              ? existingBook.author
-              : (rssAuthor ?? 'Unknown Author');
+      final author = (existingBook != null &&
+              existingBook.author != 'Unknown Author' &&
+              existingBook.author != 'Auteur inconnu')
+          ? existingBook.author
+          : (rssAuthor ?? 'Auteur inconnu');
+
+      // Extraire la langue depuis le RSS ou utiliser celle existante
+      final languageMatch =
+          RegExp(r'<language><!\[CDATA\[(.*?)\]\]></language>')
+              .firstMatch(xmlContent);
+      final rssLanguage = languageMatch?.group(1);
+      final language = (existingBook != null &&
+              existingBook.language != null &&
+              existingBook.language!.isNotEmpty)
+          ? existingBook.language
+          : (rssLanguage ?? 'Langue inconnue');
 
       final descMatch =
           RegExp(r'<description><!\[CDATA\[(.*?)\]\]></description>')
@@ -413,7 +425,7 @@ class LibrivoxService {
         title: title,
         author: author,
         description: description,
-        language: 'English',
+        language: language,
         coverUrl: null,
         totalDuration: totalDuration,
         chapters: chapters,
