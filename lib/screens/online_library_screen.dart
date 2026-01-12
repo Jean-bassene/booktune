@@ -215,7 +215,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
       child: SafeArea(
         child: Column(
           children: [
-            // Header avec titre (sans flèche retour)
+            // Header avec titre et bouton debug cache
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -229,6 +229,25 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                  ),
+                  // Bouton debug cache (temporaire)
+                  IconButton(
+                    onPressed: () async {
+                      final service =
+                          Provider.of<LibrivoxService>(context, listen: false);
+                      service.clearCache();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              'Cache vidé - Actualisez pour voir les changements'),
+                          backgroundColor: Colors.blue,
+                        ),
+                      );
+                      // Recharger les livres
+                      _fetchRecentBooks();
+                    },
+                    icon: const Icon(Icons.refresh, color: Colors.white70),
+                    tooltip: 'Vider cache et recharger',
                   ),
                 ],
               ),

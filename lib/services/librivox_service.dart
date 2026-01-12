@@ -318,12 +318,22 @@ class LibrivoxService {
   Future<LibrivoxBook?> getBookDetails(String bookId,
       {LibrivoxBook? existingBook}) async {
     LoggingService.d('[getBookDetails] Début pour bookId: $bookId');
+    LoggingService.d(
+        '[getBookDetails] existingBook fourni: ${existingBook != null}');
+    if (existingBook != null) {
+      LoggingService.d(
+          '[getBookDetails] existingBook auteur: "${existingBook.author}"');
+      LoggingService.d(
+          '[getBookDetails] existingBook titre: "${existingBook.title}"');
+    }
 
     // Vérifier le cache
     if (_bookDetailsCache.containsKey(bookId) &&
         !_bookDetailsCache[bookId]!.isExpired) {
       LoggingService.d('Utilisation du cache pour book $bookId');
-      return _bookDetailsCache[bookId]!.data;
+      final cachedBook = _bookDetailsCache[bookId]!.data;
+      LoggingService.d('[getBookDetails] Cache auteur: "${cachedBook.author}"');
+      return cachedBook;
     }
 
     try {
