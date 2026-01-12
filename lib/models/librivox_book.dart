@@ -230,23 +230,48 @@ class LibrivoxBook {
       'total_time',
       'totaltime',
       'runtime',
-      'length'
+      'length',
+      'total_time_secs',
+      'duration_seconds',
+      'playtime',
+      'time'
     ];
+
+    // Debug: afficher tous les champs liés à la durée disponibles
+    final durationFields = possibleDurationFields
+        .where((field) => json.containsKey(field))
+        .toList();
+    if (durationFields.isNotEmpty) {
+      LoggingService.d('Champs durée trouvés: $durationFields');
+      for (final field in durationFields) {
+        LoggingService.d('  $field: ${json[field]}');
+      }
+    } else {
+      LoggingService.d('Aucun champ durée trouvé dans JSON');
+    }
 
     for (final field in possibleDurationFields) {
       if (json[field] != null) {
         try {
           final durationStr = json[field].toString().trim();
           if (durationStr.isNotEmpty && durationStr != 'null') {
+            LoggingService.d(
+                'Tentative parsing durée "$field": "$durationStr"');
             // Essayer de parser comme durée (HH:MM:SS ou secondes)
-            return _parseDurationString(durationStr);
+            final parsed = _parseDurationString(durationStr);
+            if (parsed != Duration.zero) {
+              LoggingService.d('Durée parsée avec succès: $parsed');
+              return parsed;
+            }
           }
         } catch (e) {
+          LoggingService.e('Erreur parsing champ durée $field', e);
           continue;
         }
       }
     }
 
+    LoggingService.d('Aucune durée valide trouvée');
     return null;
   }
 
