@@ -292,15 +292,17 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
 
   Widget _buildSearchUI() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 20, vertical: 6), // Réduit vertical
       child: Column(
         children: [
-          // Barre de recherche (épaisseur réduite)
+          // Barre de recherche (encore plus compacte)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 6), // Réduit vertical
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10), // Rayon réduit
               border: Border.all(
                 color: Colors.white.withOpacity(0.1),
                 width: 1,
@@ -309,20 +311,23 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 onTap: () {}, // Effet tactile sans action
                 child: TextField(
                   controller: _searchController,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 13), // Police réduite
                   decoration: InputDecoration(
                     hintText: 'Rechercher auteur, titre...',
-                    hintStyle: TextStyle(color: Colors.white54, fontSize: 14),
+                    hintStyle: TextStyle(
+                        color: Colors.white54, fontSize: 13), // Police réduite
                     prefixIcon: const Icon(Icons.search,
-                        color: Colors.white54, size: 18),
+                        color: Colors.white54, size: 16), // Icône réduite
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear,
-                                color: Colors.white54, size: 18),
+                                color: Colors.white54,
+                                size: 16), // Icône réduite
                             onPressed: () {
                               _searchController.clear();
                               _fetchRecentBooks();
@@ -332,26 +337,28 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                     filled: false,
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
-                    isDense: true, // Réduit encore la hauteur
+                    isDense: true, // Ultra compact
                   ),
                   onSubmitted: (_) => _performSearch(),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          // Filtre langue
+          const SizedBox(height: 8), // Espace réduit
+          // Filtre langue (ultra compact)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('Langue:', style: TextStyle(color: Colors.white70)),
-              const SizedBox(width: 10),
+              Text('Langue:',
+                  style: TextStyle(
+                      color: Colors.white70, fontSize: 12)), // Police réduite
+              const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 1), // Padding réduit
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8), // Rayon réduit
                   border: Border.all(
                     color: Colors.white.withOpacity(0.2),
                     width: 1,
@@ -360,14 +367,18 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                 child: DropdownButton<String>(
                   value: _selectedLanguage ?? 'All',
                   dropdownColor: Colors.grey.shade900,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(
+                      color: Colors.white, fontSize: 12), // Police réduite
                   underline: const SizedBox(),
-                  icon:
-                      const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                  icon: const Icon(Icons.arrow_drop_down,
+                      color: Colors.white70, size: 14), // Icône réduite
+                  isDense: true, // Compact automatique
                   items: _supportedLanguages.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value),
+                      child: Text(value,
+                          style:
+                              const TextStyle(fontSize: 12)), // Police réduite
                     );
                   }).toList(),
                   onChanged: (String? newValue) {
