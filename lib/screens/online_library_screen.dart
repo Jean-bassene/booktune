@@ -21,6 +21,32 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
   bool _isSearch = false;
   LibrivoxBook? _playingBook;
 
+  // Cache pour les nombres de chapitres
+  final Map<String, int> _chapterCounts = {};
+
+  /// Récupère le nombre de chapitres avec cache
+  Future<int?> _getChapterCount(String bookId) async {
+    // Vérifier le cache
+    if (_chapterCounts.containsKey(bookId)) {
+      return _chapterCounts[bookId];
+    }
+
+    try {
+      final librivoxService =
+          Provider.of<LibrivoxService>(context, listen: false);
+      final count = await librivoxService.getChapterCount(bookId);
+
+      // Mettre en cache si trouvé
+      if (count != null) {
+        _chapterCounts[bookId] = count;
+      }
+
+      return count;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // Filtres
   String? _selectedLanguage;
   final List<String> _supportedLanguages = [
@@ -513,19 +539,31 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                     ],
-                                    // Indicateur chapitres (icône livre ouvert)
-                                    Icon(
-                                      Icons.menu_book,
-                                      size: 12,
-                                      color: Colors.white54,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Chapitres',
-                                      style: const TextStyle(
-                                        color: Colors.white54,
-                                        fontSize: 12,
-                                      ),
+                                    // Nombre de chapitres (chargement asynchrone)
+                                    FutureBuilder<int?>(
+                                      future: _getChapterCount(book.id),
+                                      builder: (context, snapshot) {
+                                        final count = snapshot.data;
+                                        return Row(
+                                          children: [
+                                            Icon(
+                                              Icons.menu_book,
+                                              size: 12,
+                                              color: Colors.white54,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              count != null
+                                                  ? '$count chap.'
+                                                  : 'Chapitres',
+                                              style: const TextStyle(
+                                                color: Colors.white54,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
                                     ),
                                     const SizedBox(width: 8),
                                     // Badge langue

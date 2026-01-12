@@ -313,6 +313,26 @@ class LibrivoxService {
     }
   }
 
+  /// Récupère seulement le nombre de chapitres (léger pour explorateur)
+  Future<int?> getChapterCount(String bookId) async {
+    try {
+      final rssUrl = Uri.parse('$_rssBaseUrl/$bookId');
+      final response =
+          await _httpClient.get(rssUrl).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode != 200) return null;
+
+      final xmlContent = response.body;
+      final urlPattern = RegExp(r'<enclosure url="(.*?\.mp3)"');
+      final urls =
+          urlPattern.allMatches(xmlContent).map((m) => m.group(1)!).toList();
+
+      return urls.length;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Fetches book details avec cache
   /// Si existingBook est fourni, on garde son auteur
   Future<LibrivoxBook?> getBookDetails(String bookId,
