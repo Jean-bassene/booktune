@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/downloaded_book.dart';
+import '../models/librivox_book.dart';
 import '../services/downloaded_books_database.dart';
 import '../services/logging_service.dart';
 import '../services/librivox_service.dart';
@@ -162,15 +163,38 @@ class DownloadedBooksProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Récupère les vraies informations d'un livre depuis l'API LibriVox de recherche
+  Future<LibrivoxBook?> getBookInfoFromSearchApi(String bookId) async {
+    try {
+      final librivoxService = LibrivoxService(httpClient: http.Client());
+
+      // Utiliser l'API de recherche avec l'ID du livre
+      final searchResults = await librivoxService.searchBooks(bookId, limit: 1);
+
+      // Chercher le livre exact par ID
+      final exactBook = searchResults.firstWhere(
+        (book) => book.id == bookId,
+        orElse: () => throw Exception('Livre non trouvé dans l\'API'),
+      );
+
+      LoggingService.d(
+          'Informations récupérées depuis API recherche pour $bookId');
+      return exactBook;
+    } catch (e) {
+      LoggingService.e(
+          'Erreur récupération API recherche pour livre $bookId', e);
+      return null;
+    }
+  }
+
   /// Met à jour les informations d'un livre téléchargé depuis l'API LibriVox
   Future<void> updateBookInfoFromApi(String bookId) async {
     try {
       final existingBook = getDownloadedBook(bookId);
       if (existingBook == null) return;
 
-      // Récupérer les informations actualisées depuis l'API
-      final librivoxService = LibrivoxService(httpClient: http.Client());
-      final updatedBookInfo = await librivoxService.getBookDetails(bookId);
+      // Récupérer les vraies informations depuis l'API de recherche
+      final updatedBookInfo = await getBookInfoFromSearchApi(bookId);
 
       if (updatedBookInfo != null) {
         // Créer un nouveau livre avec les informations mises à jour
@@ -191,7 +215,7 @@ class DownloadedBooksProvider with ChangeNotifier {
         }
 
         LoggingService.i(
-            'Informations du livre mises à jour: ${updatedBook.title}');
+            'Informations du livre mises à jour depuis API: ${updatedBook.title}');
       }
     } catch (e) {
       LoggingService.e('Erreur mise à jour informations livre $bookId', e);

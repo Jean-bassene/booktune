@@ -380,78 +380,49 @@ class PlayerProvider with ChangeNotifier {
   }
 
   /// Charge et joue un livre téléchargé depuis LibriVox
+  /// Utilise toujours les vraies informations depuis l'API de recherche
   Future<void> loadAndPlayDownloadedBook(DownloadedBook book) async {
-    // Vérifier si les informations sont à jour (pas "Unknown Author")
-    LibrivoxBook bookToPlay;
-    if (book.author == 'Unknown Author' || book.author == 'Auteur inconnu') {
-      // Informations obsolètes, récupérer depuis l'API
-      LoggingService.d(
-          'Informations obsolètes détectées, récupération depuis API pour ${book.title}');
-      try {
-        final librivoxService = LibrivoxService(httpClient: http.Client());
-        final updatedBookInfo = await librivoxService.getBookDetails(book.id);
+    // Récupérer toujours les vraies informations depuis l'API de recherche
+    LoggingService.d(
+        'Récupération informations depuis API recherche pour ${book.title}');
 
-        if (updatedBookInfo != null) {
-          bookToPlay = LibrivoxBook(
-            id: book.id,
-            title: updatedBookInfo.title,
-            author: updatedBookInfo.author,
-            description: updatedBookInfo.description,
-            language: updatedBookInfo.language,
-            totalDuration: updatedBookInfo.totalDuration,
-            chapters: book.chapters
-                .map((chapter) => LibrivoxChapter(
-                      title: chapter.title,
-                      url: chapter.localFilePath,
-                      trackNumber: book.chapters.indexOf(chapter) + 1,
-                      duration: chapter.duration,
-                    ))
-                .toList(),
-          );
-          LoggingService.i(
-              'Informations mises à jour pour lecture: ${bookToPlay.author}');
-        } else {
-          // Fallback: utiliser les données locales
-          bookToPlay = LibrivoxBook(
-            id: book.id,
-            title: book.title,
-            author: book.author,
-            description: book.description,
-            language: book.language,
-            totalDuration: Duration(seconds: book.totalTimeSeconds),
-            chapters: book.chapters
-                .map((chapter) => LibrivoxChapter(
-                      title: chapter.title,
-                      url: chapter.localFilePath,
-                      trackNumber: book.chapters.indexOf(chapter) + 1,
-                      duration: chapter.duration,
-                    ))
-                .toList(),
-          );
-        }
-      } catch (e) {
-        LoggingService.e(
-            'Erreur récupération informations API pour ${book.title}', e);
-        // Fallback: utiliser les données locales
-        bookToPlay = LibrivoxBook(
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          description: book.description,
-          language: book.language,
-          totalDuration: Duration(seconds: book.totalTimeSeconds),
-          chapters: book.chapters
-              .map((chapter) => LibrivoxChapter(
-                    title: chapter.title,
-                    url: chapter.localFilePath,
-                    trackNumber: book.chapters.indexOf(chapter) + 1,
-                    duration: chapter.duration,
-                  ))
-              .toList(),
-        );
-      }
-    } else {
-      // Informations à jour, utiliser directement
+    LibrivoxBook bookToPlay;
+    try {
+      // Récupérer directement depuis l'API de recherche (même méthode que l'explorateur)
+      final librivoxService = LibrivoxService(httpClient: http.Client());
+      final searchResults =
+          await librivoxService.searchBooks(book.id, limit: 1);
+
+      // Chercher le livre exact par ID
+      final exactBook = searchResults.firstWhere(
+        (b) => b.id == book.id,
+        orElse: () => throw Exception('Livre non trouvé dans l\'API'),
+      );
+
+      // Utiliser les vraies informations de l'API
+      bookToPlay = LibrivoxBook(
+        id: book.id,
+        title: exactBook.title,
+        author: exactBook.author,
+        description: exactBook.description,
+        language: exactBook.language,
+        totalDuration: exactBook.totalDuration,
+        chapters: book.chapters
+            .map((chapter) => LibrivoxChapter(
+                  title: chapter.title,
+                  url: chapter.localFilePath,
+                  trackNumber: book.chapters.indexOf(chapter) + 1,
+                  duration: chapter.duration,
+                ))
+            .toList(),
+      );
+      LoggingService.i(
+          'Informations API utilisées pour lecture: ${bookToPlay.author}');
+    } catch (e) {
+      LoggingService.e(
+          'Erreur récupération informations API pour ${book.title}, utilisation données locales',
+          e);
+      // Fallback: utiliser les données locales
       bookToPlay = LibrivoxBook(
         id: book.id,
         title: book.title,
