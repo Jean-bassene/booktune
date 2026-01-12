@@ -16,6 +16,11 @@ class DownloadedBooksProvider with ChangeNotifier {
   /// Initialise le provider
   Future<void> initialize() async {
     await loadDownloadedBooks();
+
+    // Corriger automatiquement les auteurs inconnus au démarrage
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoCorrectUnknownAuthors();
+    });
   }
 
   /// Charge tous les livres téléchargés depuis la base de données
@@ -207,6 +212,44 @@ class DownloadedBooksProvider with ChangeNotifier {
     if (updatedCount > 0) {
       LoggingService.i(
           '$updatedCount livres mis à jour avec les vrais auteurs');
+    }
+  }
+
+  /// Correction automatique des auteurs inconnus au démarrage
+  Future<void> _autoCorrectUnknownAuthors() async {
+    // Attendre un peu pour que l'interface se charge
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Vérifier s'il y a des livres avec auteurs inconnus
+    final booksWithUnknownAuthors = _downloadedBooks
+        .where((book) =>
+            book.author == 'Unknown Author' || book.author == 'Auteur inconnu')
+        .toList();
+
+    if (booksWithUnknownAuthors.isEmpty) {
+      LoggingService.d('Aucun livre avec auteur inconnu trouvé');
+      return;
+    }
+
+    LoggingService.i(
+        '${booksWithUnknownAuthors.length} livres avec auteurs inconnus détectés, correction automatique...');
+
+    // Corriger automatiquement (sans dialogue utilisateur)
+    int updatedCount = 0;
+    for (final book in booksWithUnknownAuthors) {
+      try {
+        await updateBookInfoFromApi(book.id);
+        updatedCount++;
+        // Petite pause entre chaque correction pour éviter de surcharger l'API
+        await Future.delayed(const Duration(milliseconds: 500));
+      } catch (e) {
+        LoggingService.e('Erreur correction automatique livre ${book.id}', e);
+      }
+    }
+
+    if (updatedCount > 0) {
+      LoggingService.i(
+          'Correction automatique terminée: $updatedCount livres corrigés');
     }
   }
 }
