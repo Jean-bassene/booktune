@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import '../models/audiobook.dart';
 import '../models/ambient_music.dart';
 import '../models/librivox_book.dart';
@@ -6,6 +7,7 @@ import '../models/downloaded_book.dart';
 import '../services/audio_player_service.dart';
 import '../services/logging_service.dart';
 import '../services/media_notification_service.dart';
+import '../services/librivox_service.dart';
 import 'audiobook_provider.dart';
 import 'dart:async';
 
@@ -379,22 +381,96 @@ class PlayerProvider with ChangeNotifier {
 
   /// Charge et joue un livre téléchargé depuis LibriVox
   Future<void> loadAndPlayDownloadedBook(DownloadedBook book) async {
-    _currentLibrivoxBook = LibrivoxBook(
-      id: book.id,
-      title: book.title,
-      author: book.author,
-      description: book.description,
-      language: book.language,
-      totalDuration: Duration(seconds: book.totalTimeSeconds),
-      chapters: book.chapters
-          .map((chapter) => LibrivoxChapter(
-                title: chapter.title,
-                url: chapter.localFilePath,
-                trackNumber: book.chapters.indexOf(chapter) + 1,
-                duration: chapter.duration,
-              ))
-          .toList(),
-    );
+    // Vérifier si les informations sont à jour (pas "Unknown Author")
+    LibrivoxBook bookToPlay;
+    if (book.author == 'Unknown Author' || book.author == 'Auteur inconnu') {
+      // Informations obsolètes, récupérer depuis l'API
+      LoggingService.d(
+          'Informations obsolètes détectées, récupération depuis API pour ${book.title}');
+      try {
+        final librivoxService = LibrivoxService(httpClient: http.Client());
+        final updatedBookInfo = await librivoxService.getBookDetails(book.id);
+
+        if (updatedBookInfo != null) {
+          bookToPlay = LibrivoxBook(
+            id: book.id,
+            title: updatedBookInfo.title,
+            author: updatedBookInfo.author,
+            description: updatedBookInfo.description,
+            language: updatedBookInfo.language,
+            totalDuration: updatedBookInfo.totalDuration,
+            chapters: book.chapters
+                .map((chapter) => LibrivoxChapter(
+                      title: chapter.title,
+                      url: chapter.localFilePath,
+                      trackNumber: book.chapters.indexOf(chapter) + 1,
+                      duration: chapter.duration,
+                    ))
+                .toList(),
+          );
+          LoggingService.i(
+              'Informations mises à jour pour lecture: ${bookToPlay.author}');
+        } else {
+          // Fallback: utiliser les données locales
+          bookToPlay = LibrivoxBook(
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            description: book.description,
+            language: book.language,
+            totalDuration: Duration(seconds: book.totalTimeSeconds),
+            chapters: book.chapters
+                .map((chapter) => LibrivoxChapter(
+                      title: chapter.title,
+                      url: chapter.localFilePath,
+                      trackNumber: book.chapters.indexOf(chapter) + 1,
+                      duration: chapter.duration,
+                    ))
+                .toList(),
+          );
+        }
+      } catch (e) {
+        LoggingService.e(
+            'Erreur récupération informations API pour ${book.title}', e);
+        // Fallback: utiliser les données locales
+        bookToPlay = LibrivoxBook(
+          id: book.id,
+          title: book.title,
+          author: book.author,
+          description: book.description,
+          language: book.language,
+          totalDuration: Duration(seconds: book.totalTimeSeconds),
+          chapters: book.chapters
+              .map((chapter) => LibrivoxChapter(
+                    title: chapter.title,
+                    url: chapter.localFilePath,
+                    trackNumber: book.chapters.indexOf(chapter) + 1,
+                    duration: chapter.duration,
+                  ))
+              .toList(),
+        );
+      }
+    } else {
+      // Informations à jour, utiliser directement
+      bookToPlay = LibrivoxBook(
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        description: book.description,
+        language: book.language,
+        totalDuration: Duration(seconds: book.totalTimeSeconds),
+        chapters: book.chapters
+            .map((chapter) => LibrivoxChapter(
+                  title: chapter.title,
+                  url: chapter.localFilePath,
+                  trackNumber: book.chapters.indexOf(chapter) + 1,
+                  duration: chapter.duration,
+                ))
+            .toList(),
+      );
+    }
+
+    _currentLibrivoxBook = bookToPlay;
 
     // Commencer par le premier chapitre
     _currentLibrivoxChapterIndex = 0;
