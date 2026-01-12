@@ -169,17 +169,28 @@ class DownloadedBooksProvider with ChangeNotifier {
       final librivoxService = LibrivoxService(httpClient: http.Client());
 
       // Utiliser l'API de recherche avec l'ID du livre
-      final searchResults = await librivoxService.searchBooks(bookId, limit: 1);
+      final searchResults = await librivoxService.searchBooks(bookId, limit: 5);
 
-      // Chercher le livre exact par ID
-      final exactBook = searchResults.firstWhere(
-        (book) => book.id == bookId,
-        orElse: () => throw Exception('Livre non trouvé dans l\'API'),
-      );
-
-      LoggingService.d(
-          'Informations récupérées depuis API recherche pour $bookId');
-      return exactBook;
+      // Chercher d'abord le livre exact par ID
+      try {
+        final exactBook = searchResults.firstWhere(
+          (book) => book.id == bookId,
+        );
+        LoggingService.d(
+            'Livre exact trouvé par ID $bookId dans les résultats de recherche');
+        return exactBook;
+      } catch (e) {
+        // Si pas de correspondance exacte, prendre le premier résultat
+        // (la recherche par ID peut retourner des livres liés)
+        if (searchResults.isNotEmpty) {
+          LoggingService.d(
+              'Aucun livre exact trouvé pour ID $bookId, utilisation du premier résultat de recherche');
+          return searchResults.first;
+        } else {
+          LoggingService.w('Aucun résultat trouvé pour la recherche "$bookId"');
+          return null;
+        }
+      }
     } catch (e) {
       LoggingService.e(
           'Erreur récupération API recherche pour livre $bookId', e);
