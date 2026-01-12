@@ -446,11 +446,14 @@ class LibrivoxService {
         final chapterTitle = i < titles.length ? titles[i] : 'Chapter ${i + 1}';
         final duration = i < durations.length ? durations[i] : '';
 
+        // EXTRAIRE LE NUMÉRO RÉEL DU CHAPITRE depuis le titre
+        final trackNumber = _extractChapterNumber(chapterTitle, i + 1);
+
         if (url.isNotEmpty) {
           chapters.add(LibrivoxChapter(
-            title: 'Chapter ${i + 1}: $chapterTitle',
+            title: 'Chapter $trackNumber: $chapterTitle',
             url: url,
-            trackNumber: i + 1,
+            trackNumber: trackNumber,
             duration: _parseDuration(duration),
           ));
         }
@@ -518,6 +521,40 @@ class LibrivoxService {
 
   String _stripHtmlTags(String html) {
     return html.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+  }
+
+  /// Extrait le numéro du chapitre depuis le titre
+  int _extractChapterNumber(String chapterTitle, int fallbackNumber) {
+    try {
+      // Chercher des patterns comme "Chapter 01", "Chapitre 20", "01 - Title", etc.
+      final patterns = [
+        RegExp(r'Chapter\s+(\d+)', caseSensitive: false),
+        RegExp(r'Chapitre\s+(\d+)', caseSensitive: false),
+        RegExp(r'^(\d+)\s*[-:]',
+            caseSensitive: false), // "01 - Title" ou "1: Title"
+        RegExp(r'^\s*(\d+)\s*$'), // Juste un numéro
+      ];
+
+      for (final pattern in patterns) {
+        final match = pattern.firstMatch(chapterTitle);
+        if (match != null && match.groupCount >= 1) {
+          final number = int.tryParse(match.group(1)!);
+          if (number != null && number > 0) {
+            LoggingService.d(
+                '[extractChapterNumber] "$chapterTitle" → $number');
+            return number;
+          }
+        }
+      }
+
+      // Si aucun pattern ne match, utiliser le fallback
+      LoggingService.d(
+          '[extractChapterNumber] "$chapterTitle" → fallback $fallbackNumber');
+      return fallbackNumber;
+    } catch (e) {
+      LoggingService.w('Erreur extraction numéro chapitre: "$chapterTitle"');
+      return fallbackNumber;
+    }
   }
 
   Duration _parseDuration(String? durationString) {
