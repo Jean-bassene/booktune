@@ -82,55 +82,106 @@ class LibrivoxBook {
 
   /// Extrait le nom de l'auteur depuis les données JSON de l'API
   static String _extractAuthorFromJson(Map<String, dynamic> json) {
+    // Debug: afficher la structure complète des données auteur
+    final authorFields = [
+      'authors',
+      'author',
+      'creator',
+      'author_name',
+      'author_display_name',
+      'contributor',
+      'dc_creator',
+      'dcterms_creator'
+    ].where((field) => json.containsKey(field)).toList();
+
+    if (authorFields.isNotEmpty) {
+      LoggingService.d('Champs auteur trouvés: $authorFields');
+      for (final field in authorFields) {
+        LoggingService.d(
+            '  $field: ${json[field]} (type: ${json[field]?.runtimeType})');
+      }
+    } else {
+      LoggingService.d('Aucun champ auteur trouvé dans JSON');
+    }
+
     // Essayer différents formats d'auteur dans l'API LibriVox
 
     // Format 1: Liste d'auteurs avec first_name/last_name
     if (json['authors'] != null && json['authors'] is List) {
+      LoggingService.d('Traitement format 1: liste authors');
       final List<dynamic> authorsList = json['authors'];
+      LoggingService.d(
+          'Nombre d\'auteurs dans la liste: ${authorsList.length}');
+
       final authorNames = authorsList
           .map((a) {
+            LoggingService.d(
+                '  Traitement auteur: $a (type: ${a.runtimeType})');
             if (a is Map<String, dynamic>) {
               final firstName = a['first_name'] ?? '';
               final lastName = a['last_name'] ?? '';
               final displayName = a['display_name'] ?? '';
               final gutenbergAgentName = a['gutenberg_agent_name'] ?? '';
 
+              LoggingService.d(
+                  '    first_name: "$firstName", last_name: "$lastName", display_name: "$displayName"');
+
               // Essayer display_name en premier, puis construire depuis first/last
               if (displayName.isNotEmpty) {
+                LoggingService.d(
+                    '    Utilisation display_name: "$displayName"');
                 return displayName.trim();
               } else if (firstName.isNotEmpty || lastName.isNotEmpty) {
-                return '$firstName $lastName'.trim();
+                final constructed = '$firstName $lastName'.trim();
+                LoggingService.d(
+                    '    Construction depuis first/last: "$constructed"');
+                return constructed;
               } else if (gutenbergAgentName.isNotEmpty) {
+                LoggingService.d(
+                    '    Utilisation gutenberg_agent_name: "$gutenbergAgentName"');
                 return gutenbergAgentName.trim();
               }
             } else if (a is String) {
+              LoggingService.d('    Auteur sous forme string: "$a"');
               return a.trim();
             }
+            LoggingService.d('    Aucun nom extrait pour cet auteur');
             return '';
           })
           .where((name) => name.isNotEmpty)
           .toList();
 
+      LoggingService.d('Noms d\'auteurs extraits: $authorNames');
       if (authorNames.isNotEmpty) {
-        return authorNames.join(', ');
+        final result = authorNames.join(', ');
+        LoggingService.d('Résultat format 1: "$result"');
+        return result;
       }
     }
 
     // Format 2: Auteur simple (ancien format)
     if (json['author'] != null && json['author'] is String) {
+      LoggingService.d('Traitement format 2: auteur simple');
       final authorStr = json['author'].toString().trim();
+      LoggingService.d('Auteur simple trouvé: "$authorStr"');
       if (authorStr.isNotEmpty && authorStr != 'null') {
+        LoggingService.d('Résultat format 2: "$authorStr"');
         return authorStr;
       }
     }
 
     // Format 3: Creator (format archive.org)
     if (json['creator'] != null) {
+      LoggingService.d('Traitement format 3: creator');
       if (json['creator'] is List) {
-        return (json['creator'] as List).join(', ');
+        final creators = (json['creator'] as List).join(', ');
+        LoggingService.d('Creators (liste): "$creators"');
+        return creators;
       } else if (json['creator'] is String) {
         final creator = json['creator'].toString().trim();
+        LoggingService.d('Creator (string): "$creator"');
         if (creator.isNotEmpty && creator != 'null') {
+          LoggingService.d('Résultat format 3: "$creator"');
           return creator;
         }
       }
@@ -147,23 +198,30 @@ class LibrivoxBook {
 
     for (final field in possibleAuthorFields) {
       if (json[field] != null) {
+        LoggingService.d('Traitement format 4: champ "$field"');
         if (json[field] is List) {
           final authors = (json[field] as List)
               .where((a) => a != null)
               .map((a) => a.toString())
               .toList();
+          LoggingService.d('Champ "$field" (liste): $authors');
           if (authors.isNotEmpty) {
-            return authors.join(', ');
+            final result = authors.join(', ');
+            LoggingService.d('Résultat format 4: "$result"');
+            return result;
           }
         } else {
           final authorStr = json[field].toString().trim();
+          LoggingService.d('Champ "$field" (string): "$authorStr"');
           if (authorStr.isNotEmpty && authorStr != 'null') {
+            LoggingService.d('Résultat format 4: "$authorStr"');
             return authorStr;
           }
         }
       }
     }
 
+    LoggingService.d('Aucun auteur trouvé, retour "Auteur inconnu"');
     return 'Auteur inconnu';
   }
 
