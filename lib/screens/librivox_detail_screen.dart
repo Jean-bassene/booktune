@@ -40,7 +40,33 @@ class _LibrivoxDetailScreenState extends State<LibrivoxDetailScreen> {
     try {
       final librivoxService =
           Provider.of<LibrivoxService>(context, listen: false);
-      final book = await librivoxService.getBookDetails(widget.bookId);
+
+      // Utiliser la même API que l'explorateur : API JSON de recherche
+      final searchResults =
+          await librivoxService.searchBooks(widget.bookId, limit: 1);
+
+      // Chercher le livre exact par ID
+      LibrivoxBook? book;
+      try {
+        book = searchResults.firstWhere(
+          (b) => b.id == widget.bookId,
+        );
+      } catch (e) {
+        // Si pas trouvé exactement, prendre le premier résultat
+        if (searchResults.isNotEmpty) {
+          book = searchResults.first;
+        }
+      }
+
+      if (book != null) {
+        // Récupérer les détails complets (chapitres) depuis RSS seulement si nécessaire
+        if (book.chapters.isEmpty) {
+          final fullBook = await librivoxService.getBookDetails(widget.bookId,
+              existingBook: book);
+          book = fullBook ?? book;
+        }
+      }
+
       if (mounted) {
         setState(() {
           _book = book;

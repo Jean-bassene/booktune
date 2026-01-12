@@ -18,9 +18,9 @@ class DownloadedBooksProvider with ChangeNotifier {
   Future<void> initialize() async {
     await loadDownloadedBooks();
 
-    // Corriger automatiquement les auteurs inconnus au démarrage
+    // Rafraîchir systématiquement les informations depuis l'API (comme l'explorateur)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _autoCorrectUnknownAuthors();
+      _refreshAllBooksFromApi();
     });
   }
 
@@ -250,7 +250,37 @@ class DownloadedBooksProvider with ChangeNotifier {
     }
   }
 
-  /// Correction automatique des auteurs inconnus au démarrage
+  /// Rafraîchissement systématique de tous les livres depuis l'API (comme l'explorateur)
+  Future<void> _refreshAllBooksFromApi() async {
+    // Attendre un peu pour que l'interface se charge
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (_downloadedBooks.isEmpty) {
+      LoggingService.d('Aucun livre téléchargé à rafraîchir');
+      return;
+    }
+
+    LoggingService.i(
+        'Rafraîchissement systématique des ${downloadedBooks.length} livres depuis API recherche...');
+
+    // Rafraîchir tous les livres depuis l'API de recherche (comme l'explorateur)
+    int refreshedCount = 0;
+    for (final book in _downloadedBooks) {
+      try {
+        await updateBookInfoFromApi(book.id);
+        refreshedCount++;
+        // Petite pause entre chaque rafraîchissement pour éviter surcharge API
+        await Future.delayed(const Duration(milliseconds: 300));
+      } catch (e) {
+        LoggingService.e('Erreur rafraîchissement livre ${book.id}', e);
+      }
+    }
+
+    LoggingService.i(
+        'Rafraîchissement terminé: $refreshedCount/${_downloadedBooks.length} livres mis à jour depuis API');
+  }
+
+  /// Correction automatique des auteurs inconnus au démarrage (gardée pour compatibilité)
   Future<void> _autoCorrectUnknownAuthors() async {
     // Attendre un peu pour que l'interface se charge
     await Future.delayed(const Duration(seconds: 2));
