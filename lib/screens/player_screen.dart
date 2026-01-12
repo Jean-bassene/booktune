@@ -218,26 +218,10 @@ class PlayerScreen extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          // Durée et langue - même format que online_library_screen
+          // Langue seulement (durée masquée)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (librivoxBook.totalDuration != null) ...[
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: Colors.white54,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  librivoxBook.formattedTotalDuration,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
               // Badge langue
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
