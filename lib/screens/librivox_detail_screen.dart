@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/librivox_book.dart';
 import '../providers/player_provider.dart';
+import '../providers/downloaded_books_provider.dart';
 import '../services/librivox_service.dart';
 import '../services/download_service.dart';
 
@@ -324,12 +325,16 @@ class _LibrivoxDetailScreenState extends State<LibrivoxDetailScreen> {
       }
 
       // Démarrer le téléchargement en arrière-plan
-      await downloadService.downloadBook(_book!);
+      final downloadedBook = await downloadService.downloadBook(_book!);
 
+      // Ajouter le livre téléchargé au provider
       if (mounted) {
+        final downloadedBooksProvider = context.read<DownloadedBooksProvider>();
+        await downloadedBooksProvider.addDownloadedBook(downloadedBook);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('"${_book!.title}" téléchargé avec succès !'),
+            content: Text('"${_book!.title}" ajouté à votre bibliothèque !'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
