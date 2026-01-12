@@ -74,19 +74,36 @@ class DownloadedBook {
   /// Crée depuis un Map de base de données
   factory DownloadedBook.fromMap(
       Map<String, dynamic> map, List<DownloadedChapter> chapters) {
+    // VALIDER ET CORRIGER LES DONNÉES CORROMPUES
+    final rawTotalTimeSeconds = map['totalTimeSeconds'];
+    final rawTotalSizeBytes = map['totalSizeBytes'];
+
+    // Valider et corriger totalTimeSeconds
+    final totalTimeSeconds =
+        (rawTotalTimeSeconds is int && rawTotalTimeSeconds >= 0)
+            ? rawTotalTimeSeconds
+            : 0;
+
+    // Valider et corriger totalSizeBytes
+    final totalSizeBytes = (rawTotalSizeBytes is int && rawTotalSizeBytes >= 0)
+        ? rawTotalSizeBytes
+        : 0;
+
     return DownloadedBook(
-      id: map['id'],
-      title: map['title'],
-      author: map['author'],
-      description: map['description'],
-      language: map['language'],
-      totalTimeSeconds: map['totalTimeSeconds'],
+      id: map['id'] ?? 'unknown',
+      title: map['title'] ?? 'Titre inconnu',
+      author: map['author'] ?? 'Auteur inconnu',
+      description: map['description'] ?? '',
+      language: map['language'] ?? 'Langue inconnue',
+      totalTimeSeconds: totalTimeSeconds,
       coverUrl: map['coverUrl'],
-      downloadDate: DateTime.parse(map['downloadDate']),
-      localCoverPath: map['localCoverPath'],
+      downloadDate: map['downloadDate'] != null
+          ? DateTime.tryParse(map['downloadDate']) ?? DateTime.now()
+          : DateTime.now(),
+      localCoverPath: map['localCoverPath'] ?? '',
       chapters: chapters,
-      totalSizeBytes: map['totalSizeBytes'],
-      genre: map['genre'],
+      totalSizeBytes: totalSizeBytes,
+      genre: map['genre'] ?? 'Audiobook',
     );
   }
 

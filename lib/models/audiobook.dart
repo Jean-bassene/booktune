@@ -42,15 +42,30 @@ class Audiobook {
   }
 
   factory Audiobook.fromMap(Map<String, dynamic> map) {
+    // VALIDER ET CORRIGER LES DONNÉES CORROMPUES
+    final rawDuration = map['duration'];
+    final rawLastPosition = map['lastPosition'] ?? 0;
+
+    // Valider et corriger duration
+    final duration =
+        (rawDuration is int && rawDuration > 0) ? rawDuration : null;
+
+    // Valider et corriger lastPosition
+    final lastPosition = (rawLastPosition is int && rawLastPosition >= 0)
+        ? (duration != null && rawLastPosition > duration ? 0 : rawLastPosition)
+        : 0;
+
     return Audiobook(
       id: map['id'],
-      title: map['title'],
-      author: map['author'],
-      filePath: map['filePath'],
-      duration: map['duration'],
+      title: map['title'] ?? 'Titre inconnu',
+      author: map['author'] ?? 'Auteur inconnu',
+      filePath: map['filePath'] ?? '',
+      duration: duration,
       coverArtPath: map['coverArtPath'],
-      lastPosition: map['lastPosition'] ?? 0,
-      dateImported: DateTime.fromMillisecondsSinceEpoch(map['dateImported']),
+      lastPosition: lastPosition,
+      dateImported: map['dateImported'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['dateImported'])
+          : DateTime.now(),
       fileSize: map['fileSize'],
       isFavorite: (map['isFavorite'] ?? 0) == 1,
       isNetwork: (map['isNetwork'] ?? 0) == 1,
