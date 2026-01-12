@@ -380,40 +380,29 @@ class PlayerProvider with ChangeNotifier {
   }
 
   /// Charge et joue un livre téléchargé depuis LibriVox
-  /// Utilise la même extraction que l'explorateur : API JSON de recherche
+  /// Utilise getBookDetails() avec extraction RSS améliorée
   Future<void> loadAndPlayDownloadedBook(DownloadedBook book) async {
-    // Utiliser exactement la même méthode que l'explorateur
-    LoggingService.d('Extraction API JSON pour lecteur: ${book.title}');
+    LoggingService.d('Extraction RSS améliorée pour lecteur: ${book.title}');
 
     LibrivoxBook bookToPlay;
     try {
-      // Même API que l'explorateur
+      // Utiliser getBookDetails() avec extraction RSS en priorité
       final librivoxService = LibrivoxService(httpClient: http.Client());
-      final searchResults =
-          await librivoxService.searchBooks(book.id, limit: 5);
+      final fullBookDetails =
+          await librivoxService.getBookDetails(book.id, existingBook: null);
 
-      // Même logique de recherche que l'explorateur
-      LibrivoxBook? foundBook;
-      try {
-        // Chercher d'abord ID exact
-        foundBook = searchResults.firstWhere((b) => b.id == book.id);
-      } catch (e) {
-        // Sinon premier résultat pertinent
-        if (searchResults.isNotEmpty) {
-          foundBook = searchResults.first;
-        } else {
-          throw Exception('Aucun livre trouvé dans l\'API');
-        }
+      if (fullBookDetails == null) {
+        throw Exception('Impossible de récupérer les détails du livre');
       }
 
-      // Construire le livre avec données API + chapitres locaux
+      // Construire le livre avec données RSS + chapitres locaux
       bookToPlay = LibrivoxBook(
         id: book.id,
-        title: foundBook.title, // ← Extraction API comme explorateur
-        author: foundBook.author, // ← Parsing auteurs intelligent
-        description: foundBook.description,
-        language: foundBook.language, // ← Traduction langue
-        totalDuration: foundBook.totalDuration, // ← Calcul durée
+        title: fullBookDetails.title, // ← Extraction RSS améliorée
+        author: fullBookDetails.author, // ← RSS itunes:author en priorité
+        description: fullBookDetails.description,
+        language: fullBookDetails.language, // ← Traduction langue RSS
+        totalDuration: fullBookDetails.totalDuration,
         chapters: book.chapters
             .map((chapter) => LibrivoxChapter(
                   title: chapter.title,
@@ -424,10 +413,10 @@ class PlayerProvider with ChangeNotifier {
             .toList(),
       );
       LoggingService.i(
-          'Extraction API réussie pour lecteur: ${bookToPlay.author}');
+          'Extraction RSS réussie pour lecteur: ${bookToPlay.author}');
     } catch (e) {
       LoggingService.e(
-          'Erreur extraction API pour lecteur ${book.title}, fallback local',
+          'Erreur extraction RSS pour lecteur ${book.title}, fallback local',
           e);
       // Fallback: données locales
       bookToPlay = LibrivoxBook(
