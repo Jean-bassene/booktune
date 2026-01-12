@@ -354,17 +354,29 @@ class LibrivoxService {
           .firstMatch(xmlContent);
       final title = titleMatch?.group(1) ?? 'Untitled';
 
+      // DEBUG: Chercher l'auteur dans le titre d'abord (format "Titre by Auteur")
+      final titleAuthorMatch =
+          RegExp(r'by\s+(.+?)(?:\s*\(|$)').firstMatch(title);
+      final titleAuthor = titleAuthorMatch?.group(1)?.trim();
+      LoggingService.d('[getBookDetails] Auteur dans titre: "$titleAuthor"');
+
       // PRIORISER LE RSS (comme dans booktun4) - plus fiable que l'API JSON
       final authorMatch =
           RegExp(r'<itunes:author><!\[CDATA\[(.*?)\]\]></itunes:author>')
               .firstMatch(xmlContent);
       final rssAuthor = authorMatch?.group(1);
-      final author = rssAuthor ?? // ← RSS en priorité
+      LoggingService.d('[getBookDetails] Auteur RSS brut: "$rssAuthor"');
+
+      // Essayer plusieurs sources d'auteur par ordre de priorité
+      final author = rssAuthor ?? // 1. RSS itunes:author
+          titleAuthor ?? // 2. Auteur dans le titre
           (existingBook != null &&
                   existingBook.author != 'Unknown Author' &&
                   existingBook.author != 'Auteur inconnu'
               ? existingBook.author
-              : 'Auteur inconnu');
+              : 'Auteur inconnu'); // 3. existingBook ou inconnu
+
+      LoggingService.d('[getBookDetails] Auteur final choisi: "$author"');
 
       // Extraire la langue depuis le RSS ou utiliser celle existante
       final languageMatch =
