@@ -494,9 +494,25 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
-                                // Langue seulement (durée masquée)
+                                // Durée totale + Langue (explorateur seulement)
                                 Row(
                                   children: [
+                                    if (book.totalDuration != null) ...[
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 12,
+                                        color: Colors.white54,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        book.formattedTotalDuration,
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
                                     // Badge langue
                                     Container(
                                       padding: const EdgeInsets.symmetric(
