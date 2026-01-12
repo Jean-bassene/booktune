@@ -379,6 +379,36 @@ class PlayerProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Extrait le numéro du chapitre depuis le titre
+  int _extractChapterNumberFromTitle(String chapterTitle, int fallbackNumber) {
+    try {
+      // Chercher des patterns comme "Chapter 01", "Chapitre 20", "01 - Title", etc.
+      final patterns = [
+        RegExp(r'Chapter\s+(\d+)', caseSensitive: false),
+        RegExp(r'Chapitre\s+(\d+)', caseSensitive: false),
+        RegExp(r'^(\d+)\s*[-:]',
+            caseSensitive: false), // "01 - Title" ou "1: Title"
+        RegExp(r'^\s*(\d+)\s*$'), // Juste un numéro
+      ];
+
+      for (final pattern in patterns) {
+        final match = pattern.firstMatch(chapterTitle);
+        if (match != null && match.groupCount >= 1) {
+          final number = int.tryParse(match.group(1)!);
+          if (number != null && number > 0) {
+            return number;
+          }
+        }
+      }
+
+      // Si aucun pattern ne match, utiliser le fallback
+      return fallbackNumber;
+    } catch (e) {
+      LoggingService.w('Erreur extraction numéro chapitre: "$chapterTitle"');
+      return fallbackNumber;
+    }
+  }
+
   /// Charge et joue un livre téléchargé depuis LibriVox
   /// Utilise getBookDetails() avec extraction RSS améliorée
   Future<void> loadAndPlayDownloadedBook(DownloadedBook book) async {
@@ -395,7 +425,25 @@ class PlayerProvider with ChangeNotifier {
         throw Exception('Impossible de récupérer les détails du livre');
       }
 
-      // Construire le livre avec données RSS + chapitres locaux
+      // Construire le livre avec données RSS + chapitres locaux TRIÉS
+      final sortedChapters = book.chapters.map((chapter) {
+        // Extraire le numéro réel du chapitre depuis le titre
+        final trackNumber = _extractChapterNumberFromTitle(
+            chapter.title, book.chapters.indexOf(chapter) + 1);
+        return LibrivoxChapter(
+          title: chapter.title,
+          url: chapter.localFilePath,
+          trackNumber: trackNumber,
+          duration: chapter.duration,
+        );
+      }).toList();
+
+      // Trier par numéro de chapitre pour ordre 1, 2, 3...
+      sortedChapters.sort((a, b) => a.trackNumber.compareTo(b.trackNumber));
+
+      LoggingService.d(
+          '[loadAndPlayDownloadedBook] Chapitres triés: ${sortedChapters.map((c) => c.trackNumber).toList()}');
+
       bookToPlay = LibrivoxBook(
         id: book.id,
         title: fullBookDetails.title, // ← Extraction RSS améliorée
@@ -403,14 +451,7 @@ class PlayerProvider with ChangeNotifier {
         description: fullBookDetails.description,
         language: fullBookDetails.language, // ← Traduction langue RSS
         totalDuration: fullBookDetails.totalDuration,
-        chapters: book.chapters
-            .map((chapter) => LibrivoxChapter(
-                  title: chapter.title,
-                  url: chapter.localFilePath,
-                  trackNumber: book.chapters.indexOf(chapter) + 1,
-                  duration: chapter.duration,
-                ))
-            .toList(),
+        chapters: sortedChapters,
       );
       LoggingService.i(
           'Extraction RSS réussie pour lecteur: ${bookToPlay.author}');
