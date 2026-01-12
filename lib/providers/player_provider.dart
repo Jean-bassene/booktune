@@ -199,7 +199,8 @@ class PlayerProvider with ChangeNotifier {
   }
 
   /// Helper to load and play the chapter at _currentLibrivoxChapterIndex
-  Future<void> _loadAndPlayLibrivoxChapterAtIndex() async {
+  Future<void> _loadAndPlayLibrivoxChapterAtIndex(
+      {Duration? resumePosition}) async {
     if (_currentLibrivoxBook == null ||
         _currentLibrivoxChapterIndex == -1 ||
         _currentLibrivoxChapterIndex >= _currentLibrivoxBook!.chapters.length) {
@@ -219,6 +220,13 @@ class PlayerProvider with ChangeNotifier {
       duration: chapter.duration.inSeconds,
     );
     await loadAndPlayAudiobook(tempAudiobook);
+
+    // Reprendre à la position sauvegardée si fournie
+    if (resumePosition != null && resumePosition.inSeconds > 0) {
+      await _audioService.seek(resumePosition);
+      LoggingService.i(
+          'Reprise à ${resumePosition.inSeconds}s dans le chapitre');
+    }
 
     // TODO: Notifications désactivées temporairement
     // final chapterTitle =
@@ -476,8 +484,9 @@ class PlayerProvider with ChangeNotifier {
     }
   }
 
-  /// Trouve le dernier chapitre écouté ou retourne 0 pour commencer du début
-  int _findLastListenedChapter(DownloadedBook book) {
+  /// Trouve le dernier chapitre écouté et la position dans ce chapitre
+  Map<String, dynamic> _findLastListenedChapterWithPosition(
+      DownloadedBook book) {
     try {
       // Chercher le chapitre avec le plus de secondes écoutées
       DownloadedChapter? lastChapter;
@@ -493,17 +502,29 @@ class PlayerProvider with ChangeNotifier {
       if (lastChapter != null && maxListenedSeconds > 30) {
         // Seulement reprendre si on a écouté plus de 30 secondes
         final chapterIndex = book.chapters.indexOf(lastChapter);
+        final resumePosition = Duration(seconds: maxListenedSeconds);
+
         LoggingService.i(
-            'Reprise lecture chapitre ${chapterIndex + 1} (${maxListenedSeconds}s écoutés)');
-        return chapterIndex;
+            'Reprise lecture chapitre ${chapterIndex + 1} à ${maxListenedSeconds}s');
+
+        return {
+          'chapterIndex': chapterIndex,
+          'position': resumePosition,
+        };
       } else {
         LoggingService.i(
             'Début lecture depuis chapitre 1 (pas de progression trouvée)');
-        return 0; // Commencer du début
+        return {
+          'chapterIndex': 0,
+          'position': Duration.zero,
+        };
       }
     } catch (e) {
       LoggingService.w('Erreur recherche dernier chapitre écouté: $e');
-      return 0; // Fallback: commencer du début
+      return {
+        'chapterIndex': 0,
+        'position': Duration.zero,
+      };
     }
   }
 
@@ -579,8 +600,11 @@ class PlayerProvider with ChangeNotifier {
     _currentLibrivoxBook = bookToPlay;
 
     // Reprendre depuis le dernier chapitre écouté ou commencer par le premier
-    _currentLibrivoxChapterIndex = _findLastListenedChapter(book);
-    await _loadAndPlayLibrivoxChapterAtIndex();
+    final resumeInfo = _findLastListenedChapterWithPosition(book);
+    _currentLibrivoxChapterIndex = resumeInfo['chapterIndex'];
+    final resumePosition = resumeInfo['position'];
+
+    await _loadAndPlayLibrivoxChapterAtIndex(resumePosition: resumePosition);
   }
 
   @override
