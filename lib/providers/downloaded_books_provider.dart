@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../models/downloaded_book.dart';
 import '../services/downloaded_books_database.dart';
 import '../services/logging_service.dart';
+import '../services/librivox_service.dart';
 
 /// Provider pour gérer les livres téléchargés
 class DownloadedBooksProvider with ChangeNotifier {
@@ -153,5 +155,58 @@ class DownloadedBooksProvider with ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// Met à jour les informations d'un livre téléchargé depuis l'API LibriVox
+  Future<void> updateBookInfoFromApi(String bookId) async {
+    try {
+      final existingBook = getDownloadedBook(bookId);
+      if (existingBook == null) return;
+
+      // Récupérer les informations actualisées depuis l'API
+      final librivoxService = LibrivoxService(httpClient: http.Client());
+      final updatedBookInfo = await librivoxService.getBookDetails(bookId);
+
+      if (updatedBookInfo != null) {
+        // Créer un nouveau livre avec les informations mises à jour
+        final updatedBook = existingBook.copyWith(
+          author: updatedBookInfo.author,
+          description: updatedBookInfo.description,
+          language: updatedBookInfo.language,
+        );
+
+        // Mettre à jour dans la base de données
+        await DownloadedBooksDatabase.saveDownloadedBook(updatedBook);
+
+        // Mettre à jour la liste locale
+        final index = _downloadedBooks.indexWhere((b) => b.id == bookId);
+        if (index >= 0) {
+          _downloadedBooks[index] = updatedBook;
+          notifyListeners();
+        }
+
+        LoggingService.i(
+            'Informations du livre mises à jour: ${updatedBook.title}');
+      }
+    } catch (e) {
+      LoggingService.e('Erreur mise à jour informations livre $bookId', e);
+    }
+  }
+
+  /// Met à jour tous les livres avec des auteurs inconnus
+  Future<void> updateAllBooksWithUnknownAuthors() async {
+    int updatedCount = 0;
+
+    for (final book in _downloadedBooks) {
+      if (book.author == 'Unknown Author' || book.author == 'Auteur inconnu') {
+        await updateBookInfoFromApi(book.id);
+        updatedCount++;
+      }
+    }
+
+    if (updatedCount > 0) {
+      LoggingService.i(
+          '$updatedCount livres mis à jour avec les vrais auteurs');
+    }
   }
 }

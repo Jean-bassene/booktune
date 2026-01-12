@@ -137,6 +137,7 @@ class DownloadedBook {
     String? title,
     String? author,
     String? description,
+    String? language,
     List<DownloadedChapter>? chapters,
   }) {
     return DownloadedBook(
@@ -144,7 +145,7 @@ class DownloadedBook {
       title: title ?? this.title,
       author: author ?? this.author,
       description: description ?? this.description,
-      language: language,
+      language: language ?? this.language,
       totalTimeSeconds: totalTimeSeconds,
       coverUrl: coverUrl,
       downloadDate: downloadDate,
