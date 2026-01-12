@@ -354,16 +354,17 @@ class LibrivoxService {
           .firstMatch(xmlContent);
       final title = titleMatch?.group(1) ?? 'Untitled';
 
-      // Utiliser l'auteur existant si disponible, sinon parser le RSS
+      // PRIORISER LE RSS (comme dans booktun4) - plus fiable que l'API JSON
       final authorMatch =
           RegExp(r'<itunes:author><!\[CDATA\[(.*?)\]\]></itunes:author>')
               .firstMatch(xmlContent);
       final rssAuthor = authorMatch?.group(1);
-      final author = (existingBook != null &&
-              existingBook.author != 'Unknown Author' &&
-              existingBook.author != 'Auteur inconnu')
-          ? existingBook.author
-          : (rssAuthor ?? 'Auteur inconnu');
+      final author = rssAuthor ?? // ← RSS en priorité
+          (existingBook != null &&
+                  existingBook.author != 'Unknown Author' &&
+                  existingBook.author != 'Auteur inconnu'
+              ? existingBook.author
+              : 'Auteur inconnu');
 
       // Extraire la langue depuis le RSS ou utiliser celle existante
       final languageMatch =
