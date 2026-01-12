@@ -48,8 +48,33 @@ class LibrivoxBook {
 
   /// Factory constructor for parsing book data from LibriVox API search results
   factory LibrivoxBook.fromLibrivoxApiJson(Map<String, dynamic> json) {
-    // Amélioration extraction auteurs
-    String author = _extractAuthorFromJson(json);
+    // Extraction simple et directe (revenir à méthode basique)
+    String author = 'Unknown Author';
+
+    // Essayer d'extraire depuis les différents formats possibles
+    if (json['authors'] != null && json['authors'] is List) {
+      final authorsList = json['authors'] as List;
+      if (authorsList.isNotEmpty) {
+        final firstAuthor = authorsList[0];
+        if (firstAuthor is Map<String, dynamic>) {
+          // Essayer display_name en premier
+          author = firstAuthor['display_name'] ??
+              '${firstAuthor['first_name'] ?? ''} ${firstAuthor['last_name'] ?? ''}'
+                  .trim();
+          if (author.isEmpty) author = 'Unknown Author';
+        } else if (firstAuthor is String) {
+          author = firstAuthor;
+        }
+      }
+    } else if (json['author'] != null && json['author'] is String) {
+      author = json['author'];
+    } else if (json['creator'] != null) {
+      if (json['creator'] is List) {
+        author = (json['creator'] as List).join(', ');
+      } else {
+        author = json['creator'].toString();
+      }
+    }
 
     String librivoxId = json['id']?.toString() ?? '';
     String archiveOrgIdentifier = librivoxId;
@@ -63,17 +88,36 @@ class LibrivoxBook {
       }
     }
 
-    // Extraire la langue depuis le champ 'language' de l'API
-    String language = _extractLanguageFromJson(json);
+    // Langue simple (pas de traduction pour test)
+    String language = json['language']?.toString() ?? 'Unknown';
 
-    // Calculer la durée totale si disponible
-    Duration? totalDuration = _extractTotalDurationFromJson(json);
+    // Durée simple
+    Duration? totalDuration;
+    final totaltime = json['totaltime'];
+    if (totaltime != null && totaltime.toString().isNotEmpty) {
+      try {
+        final durationStr = totaltime.toString();
+        if (durationStr.contains(':')) {
+          final parts = durationStr.split(':');
+          if (parts.length == 3) {
+            totalDuration = Duration(
+              hours: int.parse(parts[0]),
+              minutes: int.parse(parts[1]),
+              seconds: int.parse(parts[2]),
+            );
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
 
     return LibrivoxBook(
       id: archiveOrgIdentifier,
       title: json['title'] ?? 'Untitled',
       author: author,
-      description: _extractDescriptionFromJson(json),
+      description:
+          json['description']?.toString() ?? 'No description available.',
       language: language,
       totalDuration: totalDuration,
       librivoxUrl: json['url_librivox'],
