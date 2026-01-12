@@ -813,7 +813,25 @@ class _LibraryScreenState extends State<LibraryScreen>
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${book.chapters.length} chapitres • ${book.formattedSize}',
+                            '${book.chapters.length} chapitres',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (book.totalTimeSeconds > 0) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '• ${book.formattedDuration}',
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(width: 8),
+                          Text(
+                            '• ${book.formattedSize}',
                             style: const TextStyle(
                               color: Colors.white54,
                               fontSize: 12,

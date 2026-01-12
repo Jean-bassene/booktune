@@ -461,7 +461,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
@@ -474,28 +474,49 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 6),
-                                // Badge langue
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.blue.shade500,
-                                        Colors.cyan.shade500,
-                                      ],
+                                const SizedBox(height: 4),
+                                // Durée totale + Langue
+                                Row(
+                                  children: [
+                                    if (book.totalDuration != null) ...[
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 12,
+                                        color: Colors.white54,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        book.formattedTotalDuration,
+                                        style: const TextStyle(
+                                          color: Colors.white54,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    // Badge langue
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.blue.shade500,
+                                            Colors.cyan.shade500,
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        book.language ?? 'Inconnue',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    book.language ?? 'Inconnue',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),

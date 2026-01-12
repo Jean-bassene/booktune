@@ -8,6 +8,7 @@ import '../models/downloaded_book.dart';
 import '../models/librivox_book.dart';
 import 'logging_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'downloaded_books_database.dart';
 
 /// Service de gestion des téléchargements de livres LibriVox
 class DownloadService {
@@ -100,7 +101,10 @@ class DownloadService {
         downloadedChapters,
       );
 
-      LoggingService.i('Téléchargement terminé: ${book.title}');
+      // Sauvegarder dans la base de données
+      await DownloadedBooksDatabase.saveDownloadedBook(downloadedBook);
+
+      LoggingService.i('Téléchargement terminé et sauvegardé: ${book.title}');
       return downloadedBook;
     } catch (e) {
       LoggingService.e('Erreur téléchargement livre ${book.id}', e);

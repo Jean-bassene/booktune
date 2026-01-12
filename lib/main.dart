@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'providers/audiobook_provider.dart';
 import 'providers/player_provider.dart';
+import 'providers/downloaded_books_provider.dart';
 import 'services/audio_handler.dart';
 import 'services/media_conflict_resolver.dart';
 import 'services/download_service.dart';
@@ -64,6 +65,7 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => AudiobookProvider()),
         ChangeNotifierProvider(create: (_) => PlayerProvider()),
+        ChangeNotifierProvider(create: (_) => DownloadedBooksProvider()),
       ],
       child: Builder(
         builder: (context) {

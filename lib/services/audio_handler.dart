@@ -4,6 +4,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/audiobook.dart';
 import '../models/librivox_book.dart';
 import 'logging_service.dart';
+import 'media_conflict_resolver.dart';
 
 /// Gestionnaire audio pour AudioService - maintient la lecture en arrière-plan
 class BookTuneAudioHandler extends BaseAudioHandler

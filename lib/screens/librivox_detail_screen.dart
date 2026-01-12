@@ -158,12 +158,32 @@ class _LibrivoxDetailScreenState extends State<LibrivoxDetailScreen> {
                         ?.copyWith(color: Colors.white70),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Language: ${_book!.language}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.white60),
+                  Row(
+                    children: [
+                      Text(
+                        'Langue: ${_book!.language ?? 'Inconnue'}',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: Colors.white60),
+                      ),
+                      if (_book!.totalDuration != null) ...[
+                        const SizedBox(width: 16),
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: Colors.white60,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _book!.formattedTotalDuration,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Colors.white60),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Text(
