@@ -189,48 +189,144 @@ class PlayerScreen extends StatelessWidget {
   }
 
   Widget _buildTitle(PlayerProvider player) {
-    return Column(
-      children: [
-        Text(
-          player.currentAudiobook!.title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          player.currentAudiobook!.author,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 15,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        if (player.chapterInfo.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(12),
+    // Déterminer si c'est un livre LibriVox ou local
+    final isLibrivoxBook = player.currentLibrivoxBook != null;
+
+    if (isLibrivoxBook) {
+      // Livre LibriVox
+      final librivoxBook = player.currentLibrivoxBook!;
+      return Column(
+        children: [
+          Text(
+            librivoxBook.title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
             ),
-            child: Text(
-              'Chapitre ${player.chapterInfo}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            librivoxBook.author,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 15,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          // Durée et langue - même format que online_library_screen
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (librivoxBook.totalDuration != null) ...[
+                Icon(
+                  Icons.access_time,
+                  size: 14,
+                  color: Colors.white54,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  librivoxBook.formattedTotalDuration,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              // Badge langue
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue.shade500,
+                      Colors.cyan.shade500,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  librivoxBook.language ?? 'Inconnue',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (player.chapterInfo.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Chapitre ${player.chapterInfo}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
+          ],
         ],
-      ],
-    );
+      );
+    } else {
+      // Livre local
+      final audiobook = player.currentAudiobook!;
+      return Column(
+        children: [
+          Text(
+            audiobook.title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            audiobook.author,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 15,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          if (player.chapterInfo.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Chapitre ${player.chapterInfo}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
   }
 
   Widget _buildProgressBar(PlayerProvider player) {

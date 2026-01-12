@@ -852,6 +852,29 @@ class _LibraryScreenState extends State<LibraryScreen>
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      // Langue - même style que online_library_screen
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.blue.shade500,
+                              Colors.cyan.shade500,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          book.language.isNotEmpty ? book.language : 'Inconnue',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                       if (progress > 0) ...[
                         const SizedBox(height: 8),
                         LinearProgressIndicator(
