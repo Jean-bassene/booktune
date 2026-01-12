@@ -171,7 +171,7 @@ class DownloadedBooksProvider with ChangeNotifier {
       // Utiliser l'API de recherche avec l'ID du livre
       final searchResults = await librivoxService.searchBooks(bookId, limit: 5);
 
-      // Chercher d'abord le livre exact par ID
+      // NE CHERCHER QUE LE LIVRE EXACT PAR ID - pas de fallback
       try {
         final exactBook = searchResults.firstWhere(
           (book) => book.id == bookId,
@@ -180,16 +180,11 @@ class DownloadedBooksProvider with ChangeNotifier {
             'Livre exact trouvé par ID $bookId dans les résultats de recherche');
         return exactBook;
       } catch (e) {
-        // Si pas de correspondance exacte, prendre le premier résultat
-        // (la recherche par ID peut retourner des livres liés)
-        if (searchResults.isNotEmpty) {
-          LoggingService.d(
-              'Aucun livre exact trouvé pour ID $bookId, utilisation du premier résultat de recherche');
-          return searchResults.first;
-        } else {
-          LoggingService.w('Aucun résultat trouvé pour la recherche "$bookId"');
-          return null;
-        }
+        // SI PAS DE CORRESPONDANCE EXACTE, NE PAS METTRE À JOUR
+        // pour éviter de remplacer par un livre complètement différent
+        LoggingService.w(
+            'Aucun livre exact trouvé pour ID $bookId - pas de mise à jour');
+        return null; // ← RETOURNER NULL AU LIEU DU PREMIER RÉSULTAT
       }
     } catch (e) {
       LoggingService.e(
