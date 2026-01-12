@@ -533,8 +533,6 @@ class _LibraryScreenState extends State<LibraryScreen>
                         _importFiles(context);
                       } else if (value == 'ambient') {
                         _importAmbientMusic(context);
-                      } else if (value == 'update_authors') {
-                        await _updateUnknownAuthors(context);
                       }
                     },
                     itemBuilder: (context) => [
@@ -558,18 +556,6 @@ class _LibraryScreenState extends State<LibraryScreen>
                             Icon(Icons.music_note, color: Colors.purple),
                             SizedBox(width: 8),
                             Text('Importer une ambiance',
-                                style: TextStyle(color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'update_authors',
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.refresh, color: Colors.green),
-                            SizedBox(width: 8),
-                            Text('Corriger auteurs LibriVox',
                                 style: TextStyle(color: Colors.white)),
                           ],
                         ),
@@ -1568,82 +1554,6 @@ class _LibraryScreenState extends State<LibraryScreen>
     }
 
     debugPrint('=== FIN IMPORT MUSIQUE AMBIANCE ===');
-  }
-
-  Future<void> _updateUnknownAuthors(BuildContext context) async {
-    try {
-      final downloadedBooksProvider = context.read<DownloadedBooksProvider>();
-
-      // Afficher un dialogue de confirmation
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey.shade900,
-          title: Row(
-            children: [
-              Icon(Icons.refresh, color: Colors.green.shade400),
-              const SizedBox(width: 8),
-              const Text('Corriger auteurs LibriVox',
-                  style: TextStyle(color: Colors.white)),
-            ],
-          ),
-          content: const Text(
-            'Cette action va mettre à jour les informations des livres LibriVox téléchargés qui affichent "Unknown Author" ou "Auteur inconnu".\n\n'
-            'Voulez-vous continuer ?',
-            style: TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Annuler',
-                  style: TextStyle(color: Colors.white54)),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade600,
-              ),
-              child: const Text('Corriger'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirm != true) return;
-
-      // Afficher un indicateur de chargement
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Correction des auteurs en cours...'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-
-      // Mettre à jour tous les livres avec auteurs inconnus
-      await downloadedBooksProvider.updateAllBooksWithUnknownAuthors();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Correction terminée !'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors de la correction: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    }
   }
 
   void _showAmbientPicker(BuildContext context) async {

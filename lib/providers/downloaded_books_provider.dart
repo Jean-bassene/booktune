@@ -228,23 +228,6 @@ class DownloadedBooksProvider with ChangeNotifier {
     }
   }
 
-  /// Met à jour tous les livres avec des auteurs inconnus
-  Future<void> updateAllBooksWithUnknownAuthors() async {
-    int updatedCount = 0;
-
-    for (final book in _downloadedBooks) {
-      if (book.author == 'Unknown Author' || book.author == 'Auteur inconnu') {
-        await updateBookInfoFromApi(book.id);
-        updatedCount++;
-      }
-    }
-
-    if (updatedCount > 0) {
-      LoggingService.i(
-          '$updatedCount livres mis à jour avec les vrais auteurs');
-    }
-  }
-
   /// Rafraîchissement systématique de tous les livres depuis l'API (comme l'explorateur)
   Future<void> _refreshAllBooksFromApi() async {
     // Attendre un peu pour que l'interface se charge
@@ -273,43 +256,5 @@ class DownloadedBooksProvider with ChangeNotifier {
 
     LoggingService.i(
         'Rafraîchissement terminé: $refreshedCount/${_downloadedBooks.length} livres mis à jour depuis API');
-  }
-
-  /// Correction automatique des auteurs inconnus au démarrage (gardée pour compatibilité)
-  Future<void> _autoCorrectUnknownAuthors() async {
-    // Attendre un peu pour que l'interface se charge
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Vérifier s'il y a des livres avec auteurs inconnus
-    final booksWithUnknownAuthors = _downloadedBooks
-        .where((book) =>
-            book.author == 'Unknown Author' || book.author == 'Auteur inconnu')
-        .toList();
-
-    if (booksWithUnknownAuthors.isEmpty) {
-      LoggingService.d('Aucun livre avec auteur inconnu trouvé');
-      return;
-    }
-
-    LoggingService.i(
-        '${booksWithUnknownAuthors.length} livres avec auteurs inconnus détectés, correction automatique...');
-
-    // Corriger automatiquement (sans dialogue utilisateur)
-    int updatedCount = 0;
-    for (final book in booksWithUnknownAuthors) {
-      try {
-        await updateBookInfoFromApi(book.id);
-        updatedCount++;
-        // Petite pause entre chaque correction pour éviter de surcharger l'API
-        await Future.delayed(const Duration(milliseconds: 500));
-      } catch (e) {
-        LoggingService.e('Erreur correction automatique livre ${book.id}', e);
-      }
-    }
-
-    if (updatedCount > 0) {
-      LoggingService.i(
-          'Correction automatique terminée: $updatedCount livres corrigés');
-    }
   }
 }
