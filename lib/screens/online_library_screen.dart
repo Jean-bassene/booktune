@@ -494,7 +494,7 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
-                                // Durée totale + Langue (explorateur seulement)
+                                // Durée totale + Chapitres + Langue (explorateur seulement)
                                 Row(
                                   children: [
                                     if (book.totalDuration != null) ...[
@@ -513,6 +513,21 @@ class _OnlineLibraryScreenState extends State<OnlineLibraryScreen> {
                                       ),
                                       const SizedBox(width: 8),
                                     ],
+                                    // Indicateur chapitres (icône livre ouvert)
+                                    Icon(
+                                      Icons.menu_book,
+                                      size: 12,
+                                      color: Colors.white54,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Chapitres',
+                                      style: const TextStyle(
+                                        color: Colors.white54,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
                                     // Badge langue
                                     Container(
                                       padding: const EdgeInsets.symmetric(
