@@ -461,8 +461,13 @@ class LibrivoxService {
         return null;
       }
 
+      // TRIER LES CHAPITRES PAR ORDRE NUMÉRIQUE (trackNumber)
+      chapters.sort((a, b) => a.trackNumber.compareTo(b.trackNumber));
+      LoggingService.d(
+          '[getBookDetails] Chapitres triés: ${chapters.map((c) => c.trackNumber).toList()}');
+
       LoggingService.i(
-          '[getBookDetails] Succès: "$title" avec ${chapters.length} chapitres');
+          '[getBookDetails] Succès: "$title" avec ${chapters.length} chapitres (triés)');
 
       final totalDuration = chapters.fold<Duration>(
         Duration.zero,
