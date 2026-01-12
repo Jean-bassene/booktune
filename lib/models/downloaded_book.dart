@@ -92,14 +92,16 @@ class DownloadedBook {
 
   /// Calcule la progression d'écoute (0.0 à 1.0)
   double get listeningProgress {
-    if (chapters.isEmpty) return 0.0;
+    if (chapters.isEmpty || totalTimeSeconds <= 0) return 0.0;
 
     int totalListenedSeconds = 0;
     for (final chapter in chapters) {
       totalListenedSeconds += chapter.listenedSeconds;
     }
 
-    return totalListenedSeconds / totalTimeSeconds;
+    // Éviter division par zéro et valeurs infinies
+    final progress = totalListenedSeconds / totalTimeSeconds;
+    return progress.isFinite ? progress.clamp(0.0, 1.0) : 0.0;
   }
 
   /// Vérifie si le livre est terminé

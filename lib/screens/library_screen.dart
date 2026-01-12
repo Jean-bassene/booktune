@@ -1010,9 +1010,10 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Widget _buildAudiobookCard(BuildContext context, Audiobook audiobook) {
-    final progress = (audiobook.duration ?? 0) > 0
-        ? audiobook.lastPosition / (audiobook.duration ?? 1)
-        : 0.0;
+    final progress =
+        (audiobook.duration ?? 0) > 0 && audiobook.lastPosition >= 0
+            ? (audiobook.lastPosition / audiobook.duration!).clamp(0.0, 1.0)
+            : 0.0;
 
     return Container(
       margin: const EdgeInsets.symmetric(
