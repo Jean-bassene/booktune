@@ -9,6 +9,7 @@ import '../services/logging_service.dart';
 import '../services/media_notification_service.dart';
 import '../services/librivox_service.dart';
 import 'audiobook_provider.dart';
+import 'downloaded_books_provider.dart';
 import 'dart:async';
 
 class PlayerProvider with ChangeNotifier {
@@ -142,6 +143,7 @@ class PlayerProvider with ChangeNotifier {
         _audioService.playbackCompletedStream.listen((completed) {
       if (completed && _currentLibrivoxBook != null) {
         debugPrint('Chapitre terminé, passage au suivant...');
+        _saveChapterProgress(); // Sauvegarder progression avant de changer
         playNextChapter();
       }
     });
@@ -304,6 +306,7 @@ class PlayerProvider with ChangeNotifier {
     if (_isPlaying) {
       await _audioService.pause(); // Met en pause livre ET ambiance
       await _saveCurrentPosition();
+      await _saveChapterProgress(); // Sauvegarder progression chapitre
     } else {
       await _audioService.play(); // Démarre livre ET ambiance si chargée
     }
@@ -409,6 +412,101 @@ class PlayerProvider with ChangeNotifier {
     }
   }
 
+  /// Sauvegarde la progression d'écoute du chapitre en cours
+  Future<void> _saveChapterProgress() async {
+    try {
+      if (_currentLibrivoxBook == null ||
+          _currentLibrivoxChapterIndex == -1 ||
+          _position.inSeconds <= 0) {
+        return; // Rien à sauvegarder
+      }
+
+      // Trouver le livre téléchargé correspondant
+      final downloadedBooksProvider = DownloadedBooksProvider();
+      await downloadedBooksProvider.loadDownloadedBooks();
+      final downloadedBooks = downloadedBooksProvider.downloadedBooks;
+
+      final currentBook = downloadedBooks.firstWhere(
+        (book) => book.id == _currentLibrivoxBook!.id,
+        orElse: () => null as DownloadedBook,
+      );
+
+      if (currentBook == null) {
+        LoggingService.d(
+            'Livre non trouvé dans téléchargements - pas de sauvegarde');
+        return;
+      }
+
+      // Trouver le chapitre correspondant dans le livre téléchargé
+      final currentChapter =
+          _currentLibrivoxBook!.chapters[_currentLibrivoxChapterIndex];
+      final downloadedChapter = currentBook.chapters.firstWhere(
+        (chapter) => chapter.title == currentChapter.title,
+        orElse: () => null as DownloadedChapter,
+      );
+
+      if (downloadedChapter == null) {
+        LoggingService.w('Chapitre non trouvé dans téléchargements');
+        return;
+      }
+
+      // Mettre à jour la progression
+      final newListenedSeconds = _position.inSeconds;
+      if (newListenedSeconds > downloadedChapter.listenedSeconds) {
+        final updatedChapter =
+            downloadedChapter.updateProgress(newListenedSeconds);
+
+        // Mettre à jour dans la liste du livre
+        final chapterIndex = currentBook.chapters.indexOf(downloadedChapter);
+        if (chapterIndex != -1) {
+          currentBook.chapters[chapterIndex] = updatedChapter;
+
+          // Sauvegarder dans la base de données
+          await downloadedBooksProvider.updateChapterProgress(
+            updatedChapter.id,
+            newListenedSeconds,
+          );
+
+          LoggingService.d(
+              'Progression sauvegardée: ${currentChapter.title} - ${newListenedSeconds}s');
+        }
+      }
+    } catch (e) {
+      LoggingService.w('Erreur sauvegarde progression chapitre: $e');
+    }
+  }
+
+  /// Trouve le dernier chapitre écouté ou retourne 0 pour commencer du début
+  int _findLastListenedChapter(DownloadedBook book) {
+    try {
+      // Chercher le chapitre avec le plus de secondes écoutées
+      DownloadedChapter? lastChapter;
+      int maxListenedSeconds = 0;
+
+      for (final chapter in book.chapters) {
+        if (chapter.listenedSeconds > maxListenedSeconds) {
+          maxListenedSeconds = chapter.listenedSeconds;
+          lastChapter = chapter;
+        }
+      }
+
+      if (lastChapter != null && maxListenedSeconds > 30) {
+        // Seulement reprendre si on a écouté plus de 30 secondes
+        final chapterIndex = book.chapters.indexOf(lastChapter);
+        LoggingService.i(
+            'Reprise lecture chapitre ${chapterIndex + 1} (${maxListenedSeconds}s écoutés)');
+        return chapterIndex;
+      } else {
+        LoggingService.i(
+            'Début lecture depuis chapitre 1 (pas de progression trouvée)');
+        return 0; // Commencer du début
+      }
+    } catch (e) {
+      LoggingService.w('Erreur recherche dernier chapitre écouté: $e');
+      return 0; // Fallback: commencer du début
+    }
+  }
+
   /// Charge et joue un livre téléchargé depuis LibriVox
   /// Utilise getBookDetails() avec extraction RSS améliorée
   Future<void> loadAndPlayDownloadedBook(DownloadedBook book) async {
@@ -480,8 +578,8 @@ class PlayerProvider with ChangeNotifier {
 
     _currentLibrivoxBook = bookToPlay;
 
-    // Commencer par le premier chapitre
-    _currentLibrivoxChapterIndex = 0;
+    // Reprendre depuis le dernier chapitre écouté ou commencer par le premier
+    _currentLibrivoxChapterIndex = _findLastListenedChapter(book);
     await _loadAndPlayLibrivoxChapterAtIndex();
   }
 
