@@ -8,9 +8,9 @@ class PremiumService with ChangeNotifier {
   static const String _librivoxDownloadsKey = 'librivox_downloads_count';
   static const String _customAmbiencesKey = 'custom_ambiences_count';
 
-  // Limites Freemium
-  static const int maxLibrivoxDownloads = 5;
-  static const int maxCustomAmbiences = 3;
+  // Limites Freemium - DÉSACTIVÉES pour v1.0 complète
+  static const int maxLibrivoxDownloads = 999; // Illimité en pratique
+  static const int maxCustomAmbiences = 999; // Illimité en pratique
 
   bool _isPremium = false;
   DateTime? _premiumExpiry;
