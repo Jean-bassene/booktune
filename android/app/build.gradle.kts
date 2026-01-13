@@ -29,6 +29,10 @@ android {
     }
 
     signingConfigs {
+        // Configuration temporaire avec debug keys pour test
+        getByName("debug") {
+            // Utilisation des clés debug temporaires
+        }
         create("release") {
             storeFile = file("keystore_production.jks")
             storePassword = "BookTune2024Production"
@@ -39,7 +43,8 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            // Temporairement debug pour test ApkPure
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
