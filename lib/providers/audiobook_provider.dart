@@ -4,6 +4,7 @@ import '../models/ambient_music.dart';
 import '../services/database_service.dart';
 import '../services/ambient_presets_service.dart';
 import '../services/logging_service.dart';
+import '../services/premium_service.dart';
 
 class AudiobookProvider with ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;
@@ -218,6 +219,39 @@ class AudiobookProvider with ChangeNotifier {
       _error = 'Erreur de suppression: $e';
       LoggingService.e('Erreur deleteAudiobook', e);
       notifyListeners();
+    }
+  }
+
+  /// Vérifie si l'utilisateur peut importer une ambiance personnalisée
+  bool get canImportAmbience => premiumService.canImportAmbience;
+
+  /// Nombre d'imports d'ambiances restants
+  int get remainingCustomAmbiences => premiumService.remainingCustomAmbiences;
+
+  /// Message d'avertissement pour limitation ambiances
+  String get ambienceLimitationMessage =>
+      premiumService.getLimitationMessage('custom_ambience');
+
+  /// Ajoute une musique d'ambiance personnalisée (avec vérification premium)
+  Future<bool> addCustomAmbientMusic(AmbientMusic music) async {
+    if (!canImportAmbience) {
+      LoggingService.w('Import ambiance refusé - limite atteinte');
+      return false;
+    }
+
+    try {
+      final newId = await _db.insertAmbientMusic(music);
+      _ambientMusic.add(music.copyWith(id: newId));
+
+      // Incrémenter le compteur premium
+      await premiumService.incrementCustomAmbiences();
+
+      notifyListeners();
+      LoggingService.i('Ambiance personnalisée ajoutée: ${music.name}');
+      return true;
+    } catch (e) {
+      LoggingService.e('Erreur ajout ambiance personnalisée', e);
+      return false;
     }
   }
 

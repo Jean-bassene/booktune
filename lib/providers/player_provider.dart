@@ -8,6 +8,7 @@ import '../services/audio_player_service.dart';
 import '../services/logging_service.dart';
 import '../services/media_notification_service.dart';
 import '../services/librivox_service.dart';
+import '../services/premium_service.dart';
 import 'audiobook_provider.dart';
 import 'downloaded_books_provider.dart';
 import 'dart:async';
@@ -87,6 +88,21 @@ class PlayerProvider with ChangeNotifier {
   bool get hasSleepTimer => _sleepTimer != null && _sleepTimerMinutes > 0;
   double get progress =>
       _duration.inSeconds > 0 ? _position.inSeconds / _duration.inSeconds : 0.0;
+
+  /// Vérifie si la vitesse de lecture est disponible
+  bool get canChangePlaybackSpeed =>
+      premiumService.isFeatureAvailable('playback_speed');
+
+  /// Vérifie si le minuteur est disponible
+  bool get canUseSleepTimer => premiumService.isFeatureAvailable('sleep_timer');
+
+  /// Message de limitation pour la vitesse de lecture
+  String get playbackSpeedLimitationMessage =>
+      premiumService.getLimitationMessage('playback_speed');
+
+  /// Message de limitation pour le minuteur
+  String get sleepTimerLimitationMessage =>
+      premiumService.getLimitationMessage('sleep_timer');
 
   PlayerProvider() {
     _initListeners();

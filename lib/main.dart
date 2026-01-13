@@ -12,6 +12,7 @@ import 'providers/downloaded_books_provider.dart';
 import 'services/audio_handler.dart';
 import 'services/media_conflict_resolver.dart';
 import 'services/download_service.dart';
+import 'services/premium_service.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
@@ -33,6 +34,9 @@ void main() async {
 
   // Demander les permissions essentielles au démarrage
   await _requestEssentialPermissions();
+
+  // Initialiser le service premium
+  await premiumService.initialize();
 
   runApp(const MyApp());
 }

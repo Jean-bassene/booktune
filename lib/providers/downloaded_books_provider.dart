@@ -5,6 +5,7 @@ import '../models/librivox_book.dart';
 import '../services/downloaded_books_database.dart';
 import '../services/logging_service.dart';
 import '../services/librivox_service.dart';
+import '../services/premium_service.dart';
 
 /// Provider pour gérer les livres téléchargés
 class DownloadedBooksProvider with ChangeNotifier {
@@ -117,6 +118,36 @@ class DownloadedBooksProvider with ChangeNotifier {
       return _downloadedBooks.firstWhere((book) => book.id == bookId);
     } catch (e) {
       return null;
+    }
+  }
+
+  /// Vérifie si l'utilisateur peut télécharger un livre LibriVox
+  bool get canDownloadLibrivox => premiumService.canDownloadLibrivox;
+
+  /// Nombre de téléchargements LibriVox restants
+  int get remainingLibrivoxDownloads =>
+      premiumService.remainingLibrivoxDownloads;
+
+  /// Message d'avertissement pour limitation LibriVox
+  String get librivoxLimitationMessage =>
+      premiumService.getLimitationMessage('librivox_download');
+
+  /// Télécharge un livre LibriVox (avec vérification premium)
+  Future<bool> downloadLibrivoxBook(LibrivoxBook book) async {
+    if (!canDownloadLibrivox) {
+      LoggingService.w('Téléchargement LibriVox refusé - limite atteinte');
+      return false;
+    }
+
+    try {
+      // TODO: Implémenter la logique de téléchargement
+      // Pour l'instant, juste incrémenter le compteur
+      await premiumService.incrementLibrivoxDownloads();
+      LoggingService.i('Téléchargement LibriVox autorisé: ${book.title}');
+      return true;
+    } catch (e) {
+      LoggingService.e('Erreur téléchargement livre LibriVox', e);
+      return false;
     }
   }
 
