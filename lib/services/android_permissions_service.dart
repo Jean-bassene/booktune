@@ -11,9 +11,10 @@ class AndroidPermissionsService {
     final Map<String, bool> results = {};
 
     try {
-      // Permission de stockage (pour les fichiers audio locaux)
+      // Permission de stockage (lecture/écriture legacy)
       final storageStatus = await Permission.storage.request();
       results['storage'] = storageStatus.isGranted;
+      results['storageWrite'] = storageStatus.isGranted; // Inclus dans storage
 
       // Permission de notifications (Android 13+)
       final notificationStatus = await Permission.notification.request();
