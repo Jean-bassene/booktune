@@ -1,0 +1,128 @@
+[
+  {
+    "name": "Audible Business Development",
+    "email": "audible-partnerships@amazon.com",
+    "company": "Audible (Amazon)",
+    "commission": "30-40%",
+    "priority": 1,
+    "country": "USA",
+    "notes": "Leader mondial, API bien documentée"
+  },
+  {
+    "name": "Google Play Books Partner Manager",
+    "email": "play-books-partners@google.com",
+    "company": "Google Play Books",
+    "commission": "35%",
+    "priority": 2,
+    "country": "USA",
+    "notes": "Intégration Android native parfaite"
+  },
+  {
+    "name": "Apple Books Affiliate Program",
+    "email": "books-partners@apple.com",
+    "company": "Apple Books",
+    "commission": "30%",
+    "priority": 3,
+    "country": "USA",
+    "notes": "Écosystème iOS intégré"
+  },
+  {
+    "name": "Storytel Business Development",
+    "email": "partnerships@storytel.com",
+    "company": "Storytel",
+    "commission": "25-35%",
+    "priority": 4,
+    "country": "Sweden",
+    "notes": "Expansion internationale, 25 pays"
+  },
+  {
+    "name": "Kobo Partnership Team",
+    "email": "partners@kobo.com",
+    "company": "Kobo (Rakuten)",
+    "commission": "30%",
+    "priority": 5,
+    "country": "Japan",
+    "notes": "Catalogue diversifié, bonne API"
+  },
+  {
+    "name": "Scribd Publisher Relations",
+    "email": "publishers@scribd.com",
+    "company": "Scribd",
+    "commission": "20-30%",
+    "priority": 6,
+    "country": "USA",
+    "notes": "Modèle abonnement illimité"
+  },
+  {
+    "name": "Bookboon Business Development",
+    "email": "partnerships@bookboon.com",
+    "company": "Bookboon",
+    "commission": "25%",
+    "priority": 7,
+    "country": "Denmark",
+    "notes": "Niche éducative/académique"
+  },
+  {
+    "name": "Findabook Affiliate Manager",
+    "email": "affiliates@findabook.com",
+    "company": "Findabook",
+    "commission": "35%",
+    "priority": 8,
+    "country": "USA",
+    "notes": "Agrégateur indépendant, facile à intégrer"
+  },
+  {
+    "name": "Chirp Partnership Team",
+    "email": "hello@chirpbooks.com",
+    "company": "Chirp",
+    "commission": "30%",
+    "priority": 9,
+    "country": "UK",
+    "notes": "Catalogue britannique anglophone"
+  },
+  {
+    "name": "Hoopla Library Partnerships",
+    "email": "partnerships@hoopladigital.com",
+    "company": "Hoopla",
+    "commission": "Variable",
+    "priority": 10,
+    "country": "USA",
+    "notes": "Modèle bibliothèque digitale"
+  },
+  {
+    "name": "Hachette Livre Partnerships",
+    "email": "partenariats@hachette-livre.fr",
+    "company": "Hachette Livre",
+    "commission": "Négociable",
+    "priority": 11,
+    "country": "France",
+    "notes": "Grande maison française, licences audio"
+  },
+  {
+    "name": "Gallimard Rights",
+    "email": "droits@gallimard.fr",
+    "company": "Gallimard",
+    "commission": "Négociable",
+    "priority": 12,
+    "country": "France",
+    "notes": "Éditeur français prestigieux"
+  },
+  {
+    "name": "Spotify Partners",
+    "email": "partners@spotify.com",
+    "company": "Spotify",
+    "commission": "Variable",
+    "priority": 13,
+    "country": "Sweden",
+    "notes": "Intégration playlists ambiances"
+  },
+  {
+    "name": "Deezer Partnerships",
+    "email": "partnerships@deezer.com",
+    "company": "Deezer",
+    "commission": "Variable",
+    "priority": 14,
+    "country": "France",
+    "notes": "Musiques de fond personnalisées"
+  }
+]
