@@ -44,9 +44,7 @@ echo ✅ Keytool trouvé: %KEYTOOL%
 echo.
 echo Création du keystore de production...
 
-cd android\app
-
-%KEYTOOL% -genkeypair -v -keystore keystore_production.jks -alias booktune_release -keyalg RSA -keysize 2048 -validity 10000 -storepass BookTune2024Production -keypass BookTune2024Production -dname "CN=BookTune App, OU=BookTune, O=BookTune, L=Paris, ST=Ile-de-France, C=FR" -noprompt
+%KEYTOOL% -genkeypair -v -keystore "android\app\keystore_production.jks" -alias booktune_release -keyalg RSA -keysize 2048 -validity 10000 -storepass BookTune2024Production -keypass BookTune2024Production -dname "CN=BookTune App, OU=BookTune, O=BookTune, L=Paris, ST=Ile-de-France, C=FR" -noprompt
 
 if %errorlevel% equ 0 (
     echo.
@@ -58,15 +56,14 @@ if %errorlevel% equ 0 (
     echo 🔑 Alias: booktune_release
     echo 🔒 Password: BookTune2024Production
     echo.
-    echo Prochaine étape: Modifier build.gradle.kts pour utiliser ce keystore
-    echo Puis exécuter: flutter build apk --release
+    echo Prochaine étape: Générer l'APK avec flutter build apk --release
 ) else (
     echo.
     echo ❌ Erreur lors de la création du keystore
+    echo Code d'erreur: %errorlevel%
     pause
     exit /b 1
 )
 
-cd ..\..
 echo.
 pause
