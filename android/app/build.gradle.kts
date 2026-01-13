@@ -30,10 +30,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("keystore.jks")
-            storePassword = "booktune2024"
-            keyAlias = "booktune"
-            keyPassword = "booktune2024"
+            storeFile = file("keystore_production.jks")
+            storePassword = "BookTune2024Production"
+            keyAlias = "booktune_release"
+            keyPassword = "BookTune2024Production"
         }
     }
 
