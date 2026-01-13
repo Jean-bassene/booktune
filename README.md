@@ -1,76 +1,218 @@
-# Audiobook Mixer / Booktune
+# 📖 BookTune - Audiobook Player & Library
 
-An immersive audiobook player that blends your stories with ambient sounds. This Flutter application is designed to create a unique and customizable listening experience by allowing you to mix audiobook playback with background ambiances like rain, a fireplace, or a café.
+**Une application mobile révolutionnaire pour écouter vos livres audio avec une expérience immersive personnalisable.**
 
-## Features
+BookTune combine une bibliothèque personnelle d'audiobooks avec un catalogue gratuit de +15,000 livres LibriVox, le tout agrémenté de musiques d'ambiance pour une expérience d'écoute unique.
 
-- **Audiobook Library**: Import and manage your audiobook files (MP3, M4A, OGG, etc.) in a local library.
-- **Text-to-Speech (TTS)**: Import text files (.txt) and have them read aloud by a TTS engine, effectively turning any e-book into an audiobook.
-- **Ambient Sound Mixer**: Play a background ambient sound from a predefined list (fireplace, rain, forest...) while listening to your audiobook.
-- **Independent Volume Controls**: Adjust the volume of the audiobook and the ambient sound separately for the perfect mix.
-- **Playback Progress**: The app saves your progress for each book, allowing you to pick up where you left off.
-- **Modern UI**: A sleek, dark-themed, and easy-to-navigate user interface.
+[![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B?style=flat&logo=flutter)](https://flutter.dev)
+[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-000000?style=flat)](https://flutter.dev)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Architecture
+---
 
-This project is built using a clean and scalable architecture, leveraging well-known Flutter packages and patterns:
+## 🌟 **Fonctionnalités Principales**
 
-- **State Management**: `provider` is used for state management, separating UI from business logic.
-- **Service Layer**: A dedicated service layer handles business logic and interactions with data sources (e.g., `DatabaseService`, `FileImportService`, `AudioPlayerService`).
-- **Database**: `sqflite` is used for local data persistence, storing information about the audiobook library, progress, and preferences.
-- **Audio Playback**: `just_audio` provides the powerful and flexible audio playback engine.
+### 📚 **Bibliothèque Personnelle**
+- **Import local** : Fichiers MP3, M4A, OGG, FLAC, WAV depuis votre téléphone
+- **Organisation intelligente** : Tri par titre, auteur, date, progression
+- **Recherche avancée** : Filtrage dans toute votre bibliothèque
+- **Favoris** : Marquage et gestion de vos livres préférés
+- **Statistiques** : Suivi de votre temps d'écoute et progression
 
-## Recent Improvements (Branch: booktune)
+### 🌐 **Catalogue LibriVox Intégré**
+- **+15,000 livres gratuits** : Bibliothèque publique internationale
+- **Recherche intelligente** : Par titre, auteur, langue
+- **Téléchargement direct** : Chapitre par chapitre ou livre complet
+- **Cache performant** : Accès offline aux métadonnées
+- **Mises à jour automatiques** : Synchronisation avec l'API LibriVox
 
-### Logging System
-- Added centralized logging with `logger` package
-- Created `LoggingService` for consistent and structured logging
-- Replaced all `print()` statements with proper logging calls
+### 🎧 **Lecteur Audio Professionnel**
+- **Formats supportés** : MP3, M4A, OGG, FLAC, WAV
+- **Contrôles complets** : Lecture/Pause, précédent/suivant, avance/recule
+- **Vitesses ajustables** : 0.5x à 2.0x par paliers de 0.1x
+- **Chapitres** : Navigation fluide entre chapitres
+- **Progression sauvegardée** : Reprise automatique où vous vous êtes arrêté
 
-### Caching
-- Added `CacheService` for managing network file cache
-- Improved LibriVox streaming performance
-- Added cache size tracking and management
+### 🌊 **Musiques d'Ambiance**
+- **Bibliothèque intégrée** : 4 ambiances pré-packagées (feu de cheminée, pluie, forêt, café)
+- **Import personnalisé** : Ajoutez vos propres musiques d'ambiance
+- **Mixage indépendant** : Volumes séparés livre/ambiance
+- **Boucle automatique** : Lecture continue des ambiances
 
-### Testing
-- Added unit tests for `CacheService`
-- Added unit tests for `PlayerProvider`
-- Improved test coverage
+### 🎨 **Interface Utilisateur**
+- **Design Material** : Thème sombre élégant et moderne
+- **Navigation intuitive** : Onglets principaux + tiroirs latéraux
+- **Responsive** : Adaptation parfaite Android/iOS
+- **Accessibilité** : Contrôles grands et contrastés élevés
+- **Animations fluides** : Transitions et feedback visuels
 
-### Error Handling
-- Improved error handling across all providers
-- Better error logging and notifications
+---
 
-## Getting Started
+## 🏗️ **Architecture Technique**
 
-This project is a standard Flutter application. To get started, ensure you have the Flutter SDK installed.
+### **🛠️ Technologies**
+- **Framework** : Flutter 3.0+ (Dart)
+- **State Management** : Provider pattern
+- **Base de données** : SQLite (sqflite)
+- **Audio** : Just Audio + Audio Service
+- **Réseau** : HTTP client avec cache intelligent
+- **Stockage** : Système de fichiers local + SharedPreferences
 
-1.  **Clone the repository (or download the source code).**
-    ```sh
-    git checkout booktune  # Switch to improvements branch
-    ```
-
-2.  **Install dependencies:**
-    ```sh
-    flutter pub get
-    ```
-
-3.  **Run the application:**
-    ```sh
-    flutter run
-    ```
-
-## Running Tests
-
-```sh
-flutter test
+### **🏛️ Architecture Clean**
+```
+lib/
+├── models/          # Classes de données (Audiobook, LibrivoxBook, etc.)
+├── providers/       # Gestion d'état (AudiobookProvider, PlayerProvider)
+├── services/        # Logique métier (AudioPlayerService, LibrivoxService)
+├── screens/         # Interfaces utilisateur
+└── widgets/         # Composants réutilisables
 ```
 
-A few resources to get you started if this is your first Flutter project:
+### **📦 Packages Clés**
+- **just_audio** : Lecteur audio multi-formats
+- **audio_service** : Service audio en arrière-plan
+- **sqflite** : Base de données SQLite locale
+- **http** : Client HTTP avec cache
+- **shared_preferences** : Stockage persistant clé-valeur
+- **permission_handler** : Gestion des permissions Android/iOS
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🚀 **Versions & Branches**
+
+### **🌿 Branches Disponibles**
+- **`main`** : Version stable de développement
+- **`production`** : Version finale v1.0 prête pour production
+- **`booktune`** : Ancienne branche d'améliorations (obsolète)
+
+### **📈 Historique des Versions**
+
+#### **v2.0 - Freemium (En développement)**
+- ✅ Limitations intelligentes pour monétisation
+- ✅ Catalogue premium partenaires (prochainement)
+- ✅ Analytics et optimisation conversion
+
+#### **v1.0 - Production (Actuelle)**
+- ✅ Application complète et stable
+- ✅ Catalogue LibriVox intégré
+- ✅ Lecteur professionnel avec ambiances
+- ✅ Bibliothèque personnelle avancée
+- ✅ Interface Material Design
+
+#### **v0.x - Développement**
+- ✅ Import fichiers locaux
+- ✅ Lecteur audio de base
+- ✅ Musiques d'ambiance
+- ✅ Text-to-Speech (TTS)
+
+---
+
+## 📊 **Statistiques du Projet**
+
+- **📁 Codebase** : 45+ fichiers Dart, 5000+ lignes
+- **🎯 Fonctionnalités** : 8 écrans, 12 services, 8 modèles
+- **🔧 Technologies** : Flutter, SQLite, Audio Service
+- **📱 Plateformes** : Android (priorité), iOS (compatible)
+- **🌍 Langues** : Français/Anglais (interface), Multilingue (contenus)
+- **💾 Données** : +15K livres LibriVox, ambiances intégrées
+
+---
+
+## 🛠️ **Installation & Développement**
+
+### **📋 Prérequis**
+- Flutter SDK 3.0+
+- Android Studio ou VS Code
+- Appareil Android/iOS pour tests
+
+### **🚀 Démarrage Rapide**
+```bash
+# Cloner le repository
+git clone https://github.com/Jean-bassene/booktune.git
+cd booktune
+
+# Basculer sur la branche production
+git checkout production
+
+# Installer les dépendances
+flutter pub get
+
+# Lancer en mode développement
+flutter run
+```
+
+### **🧪 Tests**
+```bash
+# Tests unitaires
+flutter test
+
+# Tests d'intégration
+flutter test integration_test/
+```
+
+### **📦 Build Production**
+```bash
+# Android APK
+flutter build apk --release
+
+# Android AAB (Play Store)
+flutter build appbundle --release
+
+# iOS (nécessite macOS)
+flutter build ios --release
+```
+
+---
+
+## 📈 **Roadmap & Améliorations Futures**
+
+### **🔮 Prochaines Fonctionnalités**
+- **🛒 Catalogues payants** : Intégration Audible, Google Play Books
+- **🤝 Affiliations** : Programme de parrainage partenaires
+- **📊 Analytics avancés** : Métriques d'écoute détaillées
+- **🔄 Synchronisation** : Sauvegarde cross-device
+- **🎯 Recommandations** : IA basée sur vos préférences
+
+### **📱 Améliorations UI/UX**
+- **🎨 Thèmes** : Mode clair/sombre, thèmes personnalisables
+- **📱 Wear OS** : Contrôles sur montre connectée
+- **🗣️ Assistant vocal** : Contrôles Google Assistant/Alexa
+- **📊 Dashboard** : Statistiques personnelles d'écoute
+
+---
+
+## 🤝 **Contribution**
+
+Les contributions sont les bienvenues ! Pour contribuer :
+
+1. Fork le projet
+2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push sur la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+---
+
+## 📄 **Licence**
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+## 📞 **Contact & Support**
+
+- **📧 Email** : [Votre email de contact]
+- **🐛 Issues** : [GitHub Issues](https://github.com/Jean-bassene/booktune/issues)
+- **📱 Démo** : Site web de présentation (bientôt disponible)
+
+---
+
+## 🙏 **Remerciements**
+
+- **LibriVox** : Pour leur incroyable bibliothèque de livres audio gratuits
+- **Flutter Community** : Pour les packages et le support exceptionnels
+- **Open Source** : Pour les technologies qui rendent ce projet possible
+
+---
+
+**🎧 Découvrez une nouvelle façon d'écouter vos livres préférés avec BookTune !** ✨📚
