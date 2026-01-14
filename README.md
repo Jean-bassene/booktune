@@ -201,9 +201,10 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de
 
 ## 📞 **Contact & Support**
 
-- **📧 Email** : [Votre email de contact]
+- **📧 Email** : bassene.jean@yahoo.com
 - **🐛 Issues** : [GitHub Issues](https://github.com/Jean-bassene/booktune/issues)
-- **📱 Démo** : Site web de présentation (bientôt disponible)
+- **📱 Télécharger** : [APK Pure](https://apkpure.com/p/com.booktune.app)
+- **🌐 Site web** : [GitHub Pages](https://jean-bassene.github.io/booktune/)
 
 ---
 
